@@ -27,8 +27,15 @@ public class AuthService {
         );
 
         UserDetails userDetails = (UserDetails) authentication.getPrincipal();
-        String token = jwtService.generateToken(userDetails);
+        MyUser user = (MyUser) userDetails;  // Casteo a MyUser
+        String token = jwtService.generateToken(user);
 
-        return new AuthResponse(token);
+        // Obtener el primer rol del usuario (suponiendo que solo tiene uno)
+        String role = user.getAuthorities().stream()
+                .findFirst()  // Solo obtenemos el primer rol
+                .map(grantedAuthority -> grantedAuthority.getAuthority())
+                .orElse("ROLE_USER");  // Default si no tiene rol
+
+        return new AuthResponse(token, role);
     }
 }
