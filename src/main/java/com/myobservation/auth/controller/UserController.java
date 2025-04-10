@@ -1,16 +1,16 @@
-package com.myobservation.user.controller;
+package com.myobservation.auth.controller;
 
 
-import com.myobservation.user.entity.MyUser;
-import com.myobservation.user.service.MyUserService;
+import com.myobservation.auth.entity.MyUser;
 import org.springframework.http.ResponseEntity;
+import com.myobservation.auth.service.MyUserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/users") // Ojo en la ruta del front
+@RequestMapping("api/users") // Ojo en la ruta del front
 public class UserController {
 
     private final MyUserService myUserService;
