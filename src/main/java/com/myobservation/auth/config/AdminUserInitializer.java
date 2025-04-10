@@ -1,10 +1,12 @@
 package com.myobservation.auth.config;
 
+import com.myobservation.auth.entity.MyUser;
+import com.myobservation.auth.entity.Role;
+import com.myobservation.auth.repository.MyUserRepository;
+import com.myobservation.auth.repository.RoleRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
-import com.myobservation.auth.entity.*;
-import com.myobservation.auth.repository.*;
 
 import java.util.Set;
 
@@ -43,6 +45,19 @@ public class AdminUserInitializer implements CommandLineRunner {
 
             userRepository.save(admin);
             System.out.println("Usuario admin creado exitosamente");
+        }
+        // Crear usuario practitioner
+        if (userRepository.findByEmail("practitioner@example.com").isEmpty()) {
+            MyUser practitioner = new MyUser();
+            practitioner.setFirstName("Dr.");
+            practitioner.setLastName("House");
+            practitioner.setEmail("practitioner@example.com");
+            practitioner.setPassword(passwordEncoder.encode("practitioner123"));
+            practitioner.setRoles(Set.of(practitionerRole)); // Asignar rol PRACTITIONER
+
+            userRepository.save(practitioner);
+            System.out.println("Usuario practitioner creado exitosamente");
+
         }
     }
 }

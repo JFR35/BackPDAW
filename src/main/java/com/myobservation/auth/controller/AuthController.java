@@ -27,6 +27,7 @@ public class AuthController {
         AuthResponse authResponse = authService.authenticate(request);
         Map<String, Object> response = new HashMap<>();
         response.put("token", authResponse.token());
+        response.put("role", authResponse.role());
         response.put("message", "Login exitoso");
         return ResponseEntity.ok(response);
     }
