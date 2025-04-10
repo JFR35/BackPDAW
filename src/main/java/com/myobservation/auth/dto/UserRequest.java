@@ -5,9 +5,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
-public class EntityUserDTO {
-    private Long userId;
-
+public class UserRequest {
     @NotBlank(message = "First name cannot be blank")
     @Pattern(regexp = "^[A-Za-z]+$", message = "First name must contain only letters")
     private String firstName;
@@ -24,41 +22,32 @@ public class EntityUserDTO {
     @Size(min = 8, message = "Password must be at least 8 characters long")
     private String password;
 
-
-    public Long getUserId() {
-        return userId;
-    }
-
     public String getFirstName() {
         return firstName;
-    }
-
-    public String getLastName() {
-        return lastName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public void setUserId(Long userId) {
-        this.userId = userId;
     }
 
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    public String getLastName() {
+        return lastName;
+    }
+
     public void setLastName(String lastName) {
         this.lastName = lastName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
     }
 
     public void setPassword(String password) {
