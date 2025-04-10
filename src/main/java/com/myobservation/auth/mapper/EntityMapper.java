@@ -1,7 +1,7 @@
-package com.myobservation.user.mapper;
+package com.myobservation.auth.mapper;
 
-import com.myobservation.user.dto.EntityUserDTO;
-import com.myobservation.user.entity.MyUser;
+import com.myobservation.auth.dto.EntityUserDTO;
+import com.myobservation.auth.entity.MyUser;
 import org.mapstruct.Mapper;
 
 @Mapper(componentModel = "spring")

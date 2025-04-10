@@ -1,6 +1,6 @@
-package com.myobservation.user.service;
+package com.myobservation.auth.service;
 
-import com.myobservation.user.entity.MyUser;
+import com.myobservation.auth.entity.MyUser;
 
 import java.util.List;
 import java.util.Optional;

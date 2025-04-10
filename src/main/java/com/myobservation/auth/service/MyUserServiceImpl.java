@@ -1,9 +1,10 @@
-package com.myobservation.user.service;
+package com.myobservation.auth.service;
 
 
-import com.myobservation.user.entity.MyUser;
-import com.myobservation.user.repository.MyUserRepository;
-import com.myobservation.user.service.exception.EmailAlreadyExistsException;
+import com.myobservation.auth.entity.MyUser;
+import com.myobservation.auth.repository.MyUserRepository;
+import com.myobservation.auth.service.exception.EmailAlreadyExistsException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,9 +14,10 @@ import java.util.Optional;
 public class MyUserServiceImpl implements MyUserService {
 
     private final MyUserRepository myUserRepository;
-
-    public MyUserServiceImpl(MyUserRepository myUserRepository) {
+    private final PasswordEncoder passwordEncoder;
+    public MyUserServiceImpl(MyUserRepository myUserRepository, PasswordEncoder passwordEncoder) {
         this.myUserRepository = myUserRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
 
@@ -32,9 +34,12 @@ public class MyUserServiceImpl implements MyUserService {
     @Override
     public MyUser createUser(MyUser user) {
         Optional<MyUser> existingUser = myUserRepository.findByEmail(user.getEmail());
-        if(existingUser.isPresent()){
+        if (existingUser.isPresent()) {
             throw new EmailAlreadyExistsException("Su email ya está registrado");
         }
+        // Encripta la contraseña antes de guardar
+        String encodedPassword = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPassword);
         return myUserRepository.save(user);
     }
 
