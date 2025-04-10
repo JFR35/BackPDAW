@@ -1,49 +1,57 @@
 package com.myobservation.auth.controller;
 
-
-import com.myobservation.auth.entity.MyUser;
+import com.myobservation.auth.dto.UserRequest;
+import com.myobservation.auth.dto.UserResponse;
+import com.myobservation.auth.service.UserService;
+import com.myobservation.auth.service.exception.ResourceNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import com.myobservation.auth.service.MyUserService;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("api/users") // Ojo en la ruta del front
+@RequestMapping("api/users")
 public class UserController {
 
-    private final MyUserService myUserService;
+    private final UserService userService;
 
-    public UserController(MyUserService myUserService) {
-        this.myUserService = myUserService;
-
+    public UserController(UserService userService) {
+        this.userService = userService;
     }
 
     @GetMapping
-    public ResponseEntity <List<MyUser>> retrieveAllUsers() {
-        List<MyUser> users = myUserService.getAllUsers();
+    public ResponseEntity<List<UserResponse>> retrieveAllUsers() {
+        List<UserResponse> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
-    // Obtener un usuario por ID
     @GetMapping("/{id}")
-    public ResponseEntity<MyUser> getUserById(@PathVariable Long id) {
-        Optional user = myUserService.getUserById(id);
-        return (ResponseEntity<MyUser>) user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
+    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
+        Optional<UserResponse> user = userService.getUserById(id);
+        return user.map(ResponseEntity::ok).orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping
-    public ResponseEntity<MyUser> createUser(@RequestBody MyUser user) {
-        MyUser savedUser = myUserService.createUser(user);
+    @Transactional
+    public ResponseEntity<UserResponse> createUser(@Valid @RequestBody UserRequest userRequest) {
+        UserResponse savedUser = userService.createUser(userRequest);
         return ResponseEntity.ok(savedUser);
+    }
+
+    @PutMapping("/{id}")
+    @Transactional
+    public ResponseEntity<Optional<UserResponse>> updateUserById(@PathVariable Long id, @Valid @RequestBody UserRequest userRequest) {
+        Optional<UserResponse> updatedUser = userService.updateUserById(id, userRequest)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+        return ResponseEntity.ok(updatedUser);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
-        boolean deleted = myUserService.deleteUserById(id);
+        boolean deleted = userService.deleteUserById(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
-
-
 }
