@@ -3,14 +3,18 @@ package com.myobservation.auth.service;
 import com.myobservation.auth.dto.UserRequest;
 import com.myobservation.auth.dto.UserResponse;
 import com.myobservation.auth.entity.MyUser;
+import com.myobservation.auth.entity.Role;
 import com.myobservation.auth.mapper.EntityMapper;
 import com.myobservation.auth.repository.MyUserRepository;
+import com.myobservation.auth.repository.RoleRepository;
 import com.myobservation.auth.service.exception.EmailAlreadyExistsException;
+import com.myobservation.auth.service.exception.ResourceNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,11 +23,12 @@ public class MyUserServiceImpl implements UserService {
     private final MyUserRepository myUserRepository;
     private final PasswordEncoder passwordEncoder;
     private final EntityMapper entityMapper;
-
-    public MyUserServiceImpl(MyUserRepository myUserRepository, PasswordEncoder passwordEncoder, EntityMapper entityMapper) {
+    private final RoleRepository roleRepository;
+    public MyUserServiceImpl(MyUserRepository myUserRepository, PasswordEncoder passwordEncoder, EntityMapper entityMapper, RoleRepository roleRepository) {
         this.myUserRepository = myUserRepository;
         this.passwordEncoder = passwordEncoder;
         this.entityMapper = entityMapper;
+        this.roleRepository = roleRepository;
     }
 
     @Override
@@ -70,5 +75,18 @@ public class MyUserServiceImpl implements UserService {
             myUserRepository.delete(user);
             return true;
         }).orElse(false);
+    }
+
+    public UserResponse createPractitioner(UserRequest userRequest) {
+        MyUser practitioner = entityMapper.toMyUser(userRequest);
+
+        Role practitionerRole = roleRepository.findByName("ROLE_PRACTITIONER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role 'ROLE_PRACTITIONER' not found"));
+
+        practitioner.setRoles(Set.of(practitionerRole));
+        practitioner.setPassword(passwordEncoder.encode(practitioner.getPassword()));
+
+        MyUser savedPractitioner = myUserRepository.save(practitioner);
+        return entityMapper.toUserResponse(savedPractitioner);
     }
 }
