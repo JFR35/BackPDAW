@@ -26,7 +26,7 @@ public class FhirPatientController {
     private final FhirContext fhirContext;
     private final FhirValidator fhirValidator;
     private final FhirPatientRepository fhirPatientRepository;
-    private final IParser jsonParser;
+    private final IParser jsonParser; // Para serializar/deserializar en JSON
 
     public FhirPatientController(FhirContext fhirContext, FhirValidator fhirValidator,
                                  FhirPatientRepository fhirPatientRepository) {

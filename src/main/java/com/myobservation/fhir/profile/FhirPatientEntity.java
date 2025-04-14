@@ -3,7 +3,9 @@ package com.myobservation.fhir.profile;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.annotations.Type;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "patients")
@@ -13,8 +15,8 @@ public class FhirPatientEntity {
     private Long id;
 
     @Column(name = "resource_patient_json", columnDefinition = "jsonb")
+    @JdbcTypeCode(SqlTypes.JSON)
     private String resourcePatientJson;
-
 
     public String getResourcePatientJson() {
         return resourcePatientJson;
