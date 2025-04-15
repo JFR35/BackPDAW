@@ -1,5 +1,10 @@
 package com.myobservation.fhir.controller;
 
+import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
+import ca.uhn.fhir.validation.FhirValidator;
+import ca.uhn.fhir.validation.SingleValidationMessage;
+import ca.uhn.fhir.validation.ValidationResult;
 import com.myobservation.fhir.persistence.FhirPatientRepository;
 import com.myobservation.fhir.profile.FhirPatientEntity;
 import org.hl7.fhir.r4.model.Patient;
@@ -8,13 +13,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import ca.uhn.fhir.context.FhirContext;
-import ca.uhn.fhir.parser.IParser;
-import ca.uhn.fhir.validation.FhirValidator;
-import ca.uhn.fhir.validation.ValidationResult;
-import ca.uhn.fhir.validation.SingleValidationMessage;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -72,5 +73,54 @@ public class FhirPatientController {
     public ResponseEntity<List<FhirPatientEntity>> getAllPatients() {
         List<FhirPatientEntity> patients = fhirPatientRepository.findAll();
         return ResponseEntity.ok(patients);
+    }
+
+
+
+    @GetMapping("/{id}")
+    public ResponseEntity<String> getPatientById(@PathVariable Long id) {
+        Optional<FhirPatientEntity> entity = fhirPatientRepository.findById(id);
+        return entity.map(e -> ResponseEntity.ok(e.getResourcePatientJson()))
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<String> updatePatient(@PathVariable Long id, @RequestBody String patientJson) {
+        try {
+            Patient patient = jsonParser.parseResource(Patient.class, patientJson);
+            ValidationResult result = fhirValidator.validateWithResult(patient);
+            if (!result.isSuccessful()) {
+                String errors = result.getMessages().stream()
+                        .map(SingleValidationMessage::getMessage)
+                        .collect(Collectors.joining("\n"));
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Invalid FHIR resource:\n" + errors);
+            }
+            Optional<FhirPatientEntity> entityOpt = fhirPatientRepository.findById(id);
+            if (entityOpt.isPresent()) {
+                FhirPatientEntity entity = entityOpt.get();
+                entity.setResourcePatientJson(patientJson);
+                fhirPatientRepository.save(entity);
+                return ResponseEntity.ok("Patient updated successfully");
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+        } catch (Exception e) {
+            log.error("Error updating patient: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deletePatient(@PathVariable Long id) {
+        try {
+            if (fhirPatientRepository.existsById(id)) {
+                fhirPatientRepository.deleteById(id);
+                return ResponseEntity.ok("Patient deleted successfully");
+            }
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Patient not found");
+        } catch (Exception e) {
+            log.error("Error deleting patient: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error: " + e.getMessage());
+        }
+
     }
 }
