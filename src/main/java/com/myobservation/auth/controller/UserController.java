@@ -2,10 +2,12 @@ package com.myobservation.auth.controller;
 
 import com.myobservation.auth.dto.UserRequest;
 import com.myobservation.auth.dto.UserResponse;
+import com.myobservation.auth.repository.RoleRepository;
 import com.myobservation.auth.service.UserService;
 import com.myobservation.auth.service.exception.ResourceNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
@@ -18,7 +20,8 @@ public class UserController {
 
     private final UserService userService;
 
-    public UserController(UserService userService) {
+    public UserController(UserService userService,
+                          RoleRepository roleRepository) {
         this.userService = userService;
     }
 
@@ -53,5 +56,13 @@ public class UserController {
     public ResponseEntity<Void> deleteUserById(@PathVariable Long id) {
         boolean deleted = userService.deleteUserById(id);
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
+    }
+
+
+    @PostMapping("/practitioners")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> createPractitioner(@Valid @RequestBody UserRequest userRequest) {
+        UserResponse createdUser = userService.createPractitioner(userRequest);
+        return ResponseEntity.ok(createdUser);
     }
 }

@@ -13,4 +13,5 @@ public interface UserService {
     UserResponse createUser(UserRequest userRequest);
     Optional<Optional<UserResponse>> updateUserById(Long userId, UserRequest updatedUserRequest);
     boolean deleteUserById(Long userId);
+    UserResponse createPractitioner(UserRequest userRequest);
 }
