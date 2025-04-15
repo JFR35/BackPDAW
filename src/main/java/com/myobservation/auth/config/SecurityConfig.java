@@ -44,7 +44,8 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/api/auth/**", "/h2-console/**").permitAll()
+                        // Para pruebas desproteger estos paths
+                        .requestMatchers("/api/auth/**","/api/patients/**", "/h2-console/**").permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "PRACTITIONER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/practitioner/**").hasRole("PRACTITIONER")
