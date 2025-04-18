@@ -6,7 +6,7 @@ import ca.uhn.fhir.validation.FhirValidator;
 import ca.uhn.fhir.validation.SingleValidationMessage;
 import ca.uhn.fhir.validation.ValidationResult;
 import com.myobservation.fhir.persistence.FhirPatientRepository;
-import com.myobservation.fhir.profile.FhirPatientEntity;
+import com.myobservation.fhir.fhir.FhirPatientEntity;
 import org.hl7.fhir.r4.model.Patient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

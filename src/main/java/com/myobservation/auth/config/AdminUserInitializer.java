@@ -46,7 +46,7 @@ public class AdminUserInitializer implements CommandLineRunner {
             userRepository.save(admin);
             System.out.println("Usuario admin creado exitosamente");
         }
-        // Crear usuario practitioner
+        /* Crear usuario practitioner
         if (userRepository.findByEmail("practitioner@example.com").isEmpty()) {
             MyUser practitioner = new MyUser();
             practitioner.setFirstName("Dr.");
@@ -59,5 +59,8 @@ public class AdminUserInitializer implements CommandLineRunner {
             System.out.println("Usuario practitioner creado exitosamente");
 
         }
+
+         */
     }
+
 }
