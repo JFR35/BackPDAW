@@ -1,13 +1,12 @@
 package com.myobservation.fhir.persistence;
 
-import com.myobservation.fhir.fhir.FhirPatientEntity;
+import com.myobservation.fhir.fhir.FhirPractitionerEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface FhirPatientRepository extends JpaRepository<FhirPatientEntity, Long> {
-    Optional<FhirPatientEntity> findById(Long id);
-
+public interface FhirPractitionerRepository extends JpaRepository<FhirPractitionerEntity, Long> {
 }
