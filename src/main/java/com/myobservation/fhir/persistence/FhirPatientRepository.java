@@ -1,6 +1,6 @@
 package com.myobservation.fhir.persistence;
 
-import com.myobservation.fhir.profile.FhirPatientEntity;
+import com.myobservation.fhir.fhir.FhirPatientEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

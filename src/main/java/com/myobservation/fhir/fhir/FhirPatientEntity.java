@@ -1,5 +1,4 @@
-package com.myobservation.fhir.profile;
-
+package com.myobservation.fhir.fhir;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;

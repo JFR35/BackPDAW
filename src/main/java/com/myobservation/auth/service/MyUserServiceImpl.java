@@ -24,6 +24,8 @@ public class MyUserServiceImpl implements UserService {
     private final PasswordEncoder passwordEncoder;
     private final EntityMapper entityMapper;
     private final RoleRepository roleRepository;
+
+
     public MyUserServiceImpl(MyUserRepository myUserRepository, PasswordEncoder passwordEncoder, EntityMapper entityMapper, RoleRepository roleRepository) {
         this.myUserRepository = myUserRepository;
         this.passwordEncoder = passwordEncoder;
@@ -44,6 +46,7 @@ public class MyUserServiceImpl implements UserService {
                 .map(entityMapper::toUserResponse);
     }
 
+
     @Override
     public UserResponse createUser(UserRequest userRequest) {
         Optional<MyUser> existingUser = myUserRepository.findByEmail(userRequest.getEmail());
@@ -53,6 +56,12 @@ public class MyUserServiceImpl implements UserService {
         MyUser user = entityMapper.toMyUser(userRequest);
         String encodedPassword = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPassword);
+
+        // Asignar el rol ROLE_MEDIC al nuevo usuario
+        Role medicRole = roleRepository.findByName("ROLE_PRACTITIONER")
+                .orElseThrow(() -> new ResourceNotFoundException("Role 'ROLE_PRACTITIONER' not found"));
+        user.setRoles(Set.of(medicRole));
+
         MyUser savedUser = myUserRepository.save(user);
         return entityMapper.toUserResponse(savedUser);
     }

@@ -3,6 +3,7 @@ package com.myobservation.auth.config;
 import com.myobservation.auth.entity.MyUser;
 import com.myobservation.auth.entity.Role;
 import com.myobservation.auth.repository.MyUserRepository;
+import com.myobservation.auth.repository.RoleRepository;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -24,15 +25,11 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        MyUser user = myUserRepository.findByEmail(email)
+        MyUser user = myUserRepository.findByEmailWithRoles(email)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + email));
         return user;
-
     }
 
-    private Collection<? extends GrantedAuthority> mapRolesToAuthorities(Set<Role> roles) {
-        return roles.stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName()))
-                .collect(Collectors.toList());
-    }
+
+
 }
