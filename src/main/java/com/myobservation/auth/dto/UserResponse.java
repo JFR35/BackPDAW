@@ -2,6 +2,11 @@ package com.myobservation.auth.dto;
 
 import java.util.Set;
 
+/**
+ * Representa la respuesta de datos de un usuario.
+ *
+ * Esta clase se usa para enviar información de usuario desde la API sin exponer datos sensibles como la contraseña.
+ */
 public class UserResponse {
     private Long userId;
     private String firstName;

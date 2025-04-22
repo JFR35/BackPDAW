@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controlador de autenticación que gestiona el inicio de sesión de usuarios.
+ * Este controlador proporciona un endpoint para la autenticación mediante JWT.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

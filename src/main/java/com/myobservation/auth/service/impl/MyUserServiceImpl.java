@@ -1,4 +1,4 @@
-package com.myobservation.auth.service;
+package com.myobservation.auth.service.impl;
 
 import com.myobservation.auth.dto.UserRequest;
 import com.myobservation.auth.dto.UserResponse;
@@ -7,6 +7,7 @@ import com.myobservation.auth.entity.Role;
 import com.myobservation.auth.mapper.EntityMapper;
 import com.myobservation.auth.repository.MyUserRepository;
 import com.myobservation.auth.repository.RoleRepository;
+import com.myobservation.auth.service.UserService;
 import com.myobservation.auth.service.exception.EmailAlreadyExistsException;
 import com.myobservation.auth.service.exception.ResourceNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -17,6 +18,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Servicio para la gestión de usuarios con operaciones CRUD
+ * incluyendo la asignación automática de roles.
+ */
 @Service
 public class MyUserServiceImpl implements UserService {
 
@@ -26,6 +31,13 @@ public class MyUserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
 
 
+    /**
+     * Constructor para inyectar:
+     * @param myUserRepository Repositorio de usuarios.
+     * @param passwordEncoder Codificador de password.
+     * @param entityMapper Mapeador de entidades <-> DTO.
+     * @param roleRepository Repositorio de roles.
+     */
     public MyUserServiceImpl(MyUserRepository myUserRepository, PasswordEncoder passwordEncoder, EntityMapper entityMapper, RoleRepository roleRepository) {
         this.myUserRepository = myUserRepository;
         this.passwordEncoder = passwordEncoder;
@@ -46,7 +58,12 @@ public class MyUserServiceImpl implements UserService {
                 .map(entityMapper::toUserResponse);
     }
 
-
+    /**
+     * Crear nuevo usuario y asignar Rol de Practitioner.
+     * Si el mail ya está registrado lanza exception personalizada.
+     * @param userRequest Si el correo ya existe.
+     * @return Si el Rol no existe.
+     */
     @Override
     public UserResponse createUser(UserRequest userRequest) {
         Optional<MyUser> existingUser = myUserRepository.findByEmail(userRequest.getEmail());

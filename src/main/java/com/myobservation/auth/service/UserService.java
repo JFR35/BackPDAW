@@ -6,7 +6,7 @@ import com.myobservation.auth.dto.UserResponse;
 
 import java.util.List;
 import java.util.Optional;
-
+// Interface para gestión de usuarios incluyendo operaciones CRUD habituales
 public interface UserService {
     List<UserResponse> getAllUsers();
     Optional<UserResponse> getUserById(Long userId);
