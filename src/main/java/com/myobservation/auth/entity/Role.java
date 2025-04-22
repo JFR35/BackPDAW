@@ -3,6 +3,9 @@ package com.myobservation.auth.entity;
 import jakarta.persistence.*;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
+/**
+ * Representa los roles en el sistema de autenticación.
+ */
 @Table(name = "roles")
 @Entity
 public class Role {

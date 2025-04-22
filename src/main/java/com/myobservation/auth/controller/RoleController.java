@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
+/**
+ * Controla la gestión de roles en el sistema, este controller esta protegido y es solo accesible para ROLE_ADMIN.
+ */
 @RestController
 @RequestMapping("api/admin/roles") // Ejemplo de ruta protegida para administradores
 @PreAuthorize("hasRole('ADMIN')") // Solo los administradores pueden acceder

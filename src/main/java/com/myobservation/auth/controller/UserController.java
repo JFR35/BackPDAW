@@ -14,6 +14,9 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * Controlador para la gestión de usuarios.
+ */
 @RestController
 @RequestMapping("api/users")
 public class UserController {
@@ -58,7 +61,7 @@ public class UserController {
         return deleted ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 
-
+    // Verificar si se puede borrar este endpoint
     @PostMapping("/practitioners")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<UserResponse> createPractitioner(@Valid @RequestBody UserRequest userRequest) {

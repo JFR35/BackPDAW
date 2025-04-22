@@ -30,7 +30,8 @@ public class FhirValidationConfig {
     @Bean
     public PrePopulatedValidationSupport prePopulatedValidationSupport(FhirContext fhirContext, ResourceLoader resourceLoader) throws IOException {
         PrePopulatedValidationSupport support = new PrePopulatedValidationSupport(fhirContext);
-        String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-paciente-persistencia.json";
+        //String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-paciente-persistencia.json";
+        String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-practitioner-persistencia.json";
         log.info("Resource file exists: {}", resourceLoader.getResource(resourcePath).exists());
 
         try (InputStream inputStream = resourceLoader.getResource(resourcePath).getInputStream()) {

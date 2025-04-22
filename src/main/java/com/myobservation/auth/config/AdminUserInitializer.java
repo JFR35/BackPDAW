@@ -27,14 +27,14 @@ public class AdminUserInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Crear roles si no existen
+        // Crear roles
         Role adminRole = roleRepository.findByName("ROLE_ADMIN")
                 .orElseGet(() -> roleRepository.save(new Role("ROLE_ADMIN")));
 
         Role practitionerRole = roleRepository.findByName("ROLE_PRACTITIONER")
                 .orElseGet(() -> roleRepository.save(new Role("ROLE_PRACTITIONER")));
 
-        // Crear usuario admin si no existe
+        // Crear usuario admin
         if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             MyUser admin = new MyUser();
             admin.setFirstName("Admin");
@@ -57,9 +57,7 @@ public class AdminUserInitializer implements CommandLineRunner {
 
             userRepository.save(practitioner);
             System.out.println("Usuario practitioner creado exitosamente");
-
         }
-
          */
     }
 

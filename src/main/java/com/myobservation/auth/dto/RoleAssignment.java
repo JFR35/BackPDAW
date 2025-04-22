@@ -2,6 +2,8 @@ package com.myobservation.auth.dto;
 
 import java.util.List;
 
+// Clase para la asignación de roles a un usuario, los gestiona y facilita el envío de datos en la API
+
 public class RoleAssignment {
     private Long userId;
     private List<String> roleNames;
