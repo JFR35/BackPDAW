@@ -5,6 +5,10 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * Representa la entidad de un Practitioner en FHIR alamcenada en BBDD.
+ * Esta clase almacena los datos del recurso FHIR Practitioner en formato JSON dentro de la base de datos.
+ */
 @Entity
 @Table(name = "practitioners")
 public class FhirPractitionerEntity {
@@ -17,8 +21,7 @@ public class FhirPractitionerEntity {
     private String resourcePractitionerJson;
 
     /**
-     * Relacion OneToOne entre FhirPractitionerEntity y @JoingColum(name= "user_id)
-     * define la relacion con la entidad MyUser
+     * Relación **OneToOne** con {@link MyUser}, indicando qué usuario está asociado al Practitioner.
      */
     @OneToOne
     @JoinColumn(name = "user_id")
@@ -36,6 +39,10 @@ public class FhirPractitionerEntity {
         return resourcePractitionerJson;
     }
 
+    /**
+     * Estalcene la representación JSON del recurso FHIR Practitioner
+     * @param resourcePractitionerJson Nuevo JSON del Practitioner.
+     */
     public void setResourcePractitionerJson(String resourcePractitionerJson) {
         this.resourcePractitionerJson = resourcePractitionerJson;
     }
