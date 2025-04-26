@@ -45,6 +45,7 @@ public class FhirPractitionerController {
         this.userRepository = userRepository;
         this.jsonParser = fhirContext.newJsonParser().setPrettyPrint(true);
     }
+
     @PostMapping
     public ResponseEntity<Map<String, ?>> createPractitioner(@RequestBody String practitionerJson) {
         log.info("Received practitioner JSON: {}", practitionerJson);
@@ -55,12 +56,18 @@ public class FhirPractitionerController {
 
             Practitioner practitioner = jsonParser.parseResource(Practitioner.class, practitionerJson);
             ValidationResult result = fhirValidator.validateWithResult(practitioner);
-
             if (result.isSuccessful()) {
+                // Add meta.profile after validation to reference the custom profile
+                practitioner.getMeta().addProfile("http://myhealthapp.org/fhir/StructureDefinition/mi-practitioner-persistencia");
+
                 FhirPractitionerEntity entity = new FhirPractitionerEntity();
-                entity.setResourcePractitionerJson(practitionerJson);
+                // Store the updated JSON with meta.profile
+                entity.setResourcePractitionerJson(jsonParser.encodeResourceToString(practitioner));
 
                 Long userId = getCurrentUserId();
+                if (userId == null) {
+                    return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Collections.singletonMap("error", "User not authenticated"));
+                }
                 Optional<MyUser> myUserOptional = userRepository.findById(userId);
 
                 if (myUserOptional.isPresent()) {
@@ -81,8 +88,9 @@ public class FhirPractitionerController {
                 }
             } else {
                 List<String> errors = result.getMessages().stream()
-                        .map(SingleValidationMessage::getMessage)
+                        .map(msg -> String.format("Validation error at %s: %s", msg.getLocationString(), msg.getMessage()))
                         .collect(Collectors.toList());
+                log.warn("Validation failed for Practitioner: {}", errors);
                 return ResponseEntity.badRequest().body(Collections.singletonMap("errors", errors));
             }
         } catch (Exception e) {
@@ -90,7 +98,6 @@ public class FhirPractitionerController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Error: " + e.getMessage()));
         }
     }
-
     // Ejemplo de método para obtener el userId del contexto (si usas Spring Security):
     private Long getCurrentUserId() {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

@@ -16,6 +16,10 @@ public class FhirPractitionerEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    /* Esta columna habria que desnormalizar para almacenar identifier_value
+    @Column(name = "identifier_value")
+    private String identifierValue;
+     */
     @Column(name = "resource_practitioner_json", columnDefinition = "jsonb")
     @JdbcTypeCode(SqlTypes.JSON)
     private String resourcePractitionerJson;

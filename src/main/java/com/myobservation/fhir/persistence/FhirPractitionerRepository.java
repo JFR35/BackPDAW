@@ -17,12 +17,12 @@ public interface FhirPractitionerRepository extends JpaRepository<FhirPractition
      */
     Optional<FhirPractitionerEntity> findByUser_UserId(Long userId);
     /**
-     * Quewy para búsqueda por identificador o nombre, solución simple para buscar dentro del JSON
-     * Para una solución más robusta se necesita desnormalizar identifier.value en una columna
+     /**
+     * Busca Practitioners cuyo identifier.value contenga el texto proporcionado.
+     * @param identifier Texto a buscar en el campo identifier.value del JSON.
+     * @return Lista de {@link FhirPractitionerEntity} que coinciden con el criterio.
      */
-    @Query("SELECT p FROM FhirPractitionerEntity p WHERE p.resourcePractitionerJson LIKE %:identifier%")
+    @Query(value = "SELECT * FROM practitioners WHERE resource_practitioner_json #>> '{identifier,0,value}' LIKE '%' || :identifier || '%'", nativeQuery = true)
     List<FhirPractitionerEntity> findByIdentifierContaining(String identifier);
-    // Valorar añadir métodos de búsqueda comunes por campos FHIR como findByIdenttifier o incluso
-
 
 }
