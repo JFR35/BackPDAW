@@ -1,11 +1,24 @@
 {
   "resourceType": "StructureDefinition",
   "id": "mi-practitioner-persistencia",
-  "url": "http://hl7.org/fhir/us/example/StructureDefinition/mi-practitioner-persistencia",
+  "url": "http://myhealthapp.org/fhir/StructureDefinition/mi-practitioner-persistencia",
+  "version": "0.1.0",
   "name": "MiPractitionerPersistencia",
   "title": "Perfil de Practitioner para Persistencia",
   "status": "draft",
-  "description": "Perfil del recurso Practitioner para la persistencia en la aplicación.",
+  "publisher": "My Health App",
+  "contact": [
+    {
+      "name": "My Health App Team",
+      "telecom": [
+        {
+          "system": "email",
+          "value": "support@myhealthapp.org"
+        }
+      ]
+    }
+  ],
+  "description": "Perfil del recurso Practitioner para la persistencia en la aplicación, definiendo restricciones para gestionar datos de profesionales de salud en un sistema local.",
   "fhirVersion": "4.0.1",
   "kind": "resource",
   "abstract": false,
@@ -58,6 +71,14 @@
         "id": "Practitioner.qualification",
         "path": "Practitioner.qualification",
         "min": 1
+      },
+      {
+        "id": "Practitioner.qualification.code",
+        "path": "Practitioner.qualification.code",
+        "binding": {
+          "strength": "preferred",
+          "valueSet": "http://hl7.org/fhir/ValueSet/v2-2.7-0360"
+        }
       }
     ]
   }

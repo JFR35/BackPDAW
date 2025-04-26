@@ -17,16 +17,31 @@ import org.springframework.core.io.ResourceLoader;
 import java.io.IOException;
 import java.io.InputStream;
 
+/**
+ * Clase de configuración para la validación de recursos FHIR en el sistema.
+ * Las validaciones se realizan conta el structureDefinition en una implementación local.
+ */
 @Configuration
 public class FhirValidationConfig {
 
     private static final Logger log = LoggerFactory.getLogger(FhirValidationConfig.class);
 
+    /**
+     * Crea el contexto de FHIR en versión R4
+     * @return Instancia de {@link FhirContext},
+     */
     @Bean
     public FhirContext fhirContext() {
         return FhirContext.forR4();
     }
 
+    /**
+     * Carga el perfil personalizado desde un archivo JSON.
+     * @param fhirContext Contexto de FHIR usado en la validación.
+     * @param resourceLoader Carga el recurso desde el classpath.
+     * @return Insta de {@link PrePopulatedValidationSupport} con el perfil cargado.
+     * @throws IOException Si no se encuentra el perfil o hay errores en la carga.
+     */
     @Bean
     public PrePopulatedValidationSupport prePopulatedValidationSupport(FhirContext fhirContext, ResourceLoader resourceLoader) throws IOException {
         PrePopulatedValidationSupport support = new PrePopulatedValidationSupport(fhirContext);
@@ -49,6 +64,13 @@ public class FhirValidationConfig {
         return support;
     }
 
+    /**
+     * Configura el validador FHIR con soporte para perfiles y terminologías.
+     *
+     * @param fhirContext Contexto FHIR utilizado en la validación.
+     * @param prePopulatedValidationSupport Soporte de validación predefinido con perfiles personalizados.
+     * @return Instancia de {@link FhirValidator} configurada.
+     */
     @Bean
     public FhirValidator fhirValidator(FhirContext fhirContext, PrePopulatedValidationSupport prePopulatedValidationSupport) {
         ValidationSupportChain validationSupportChain = new ValidationSupportChain(

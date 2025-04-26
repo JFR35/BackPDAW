@@ -4,6 +4,7 @@ import com.myobservation.auth.entity.MyUser;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.modulith.NamedInterface;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -14,6 +15,7 @@ import java.util.Optional;
  * acceso a datos.
  */
 @Repository
+@NamedInterface
 public interface MyUserRepository extends JpaRepository<MyUser,Long> {
     /**
      * Busca un usuario por su email e incluye los roles

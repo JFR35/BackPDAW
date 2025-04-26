@@ -1,8 +1,8 @@
 package com.myobservation.auth.controller;
 
-import com.myobservation.auth.config.AuthRequest;
-import com.myobservation.auth.config.AuthResponse;
-import com.myobservation.auth.config.AuthService;
+import com.myobservation.auth.security.AuthRequest;
+import com.myobservation.auth.security.AuthResponse;
+import com.myobservation.auth.security.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

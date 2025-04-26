@@ -1,4 +1,4 @@
-package com.myobservation.auth.config;
+package com.myobservation.auth.security;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
