@@ -130,4 +130,24 @@ public class FhirPractitionerController {
                     .body(Collections.singletonMap("error", "Error: " + e.getMessage()));
         }
     }
+
+    /**
+     * Endpoint para busqueda por identifier
+     * @param identifier
+     * @return
+     */
+    @GetMapping("/search")
+    public ResponseEntity<Map<String, ?>> searchPractitioners(@RequestParam String identifier) {
+        try {
+            List<FhirPractitionerEntity> practitioners = fhirPractitionerRepository.findByIdentifierContaining(identifier);
+            List<String> practitionerJsons = practitioners.stream()
+                    .map(FhirPractitionerEntity::getResourcePractitionerJson)
+                    .collect(Collectors.toList());
+            return ResponseEntity.ok(Collections.singletonMap("resources", practitionerJsons));
+        } catch (Exception e) {
+            log.error("Error searching Practitioners", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error: " + e.getMessage()));
+        }
+    }
 }

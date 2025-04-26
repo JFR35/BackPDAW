@@ -1,4 +1,4 @@
-package com.myobservation.auth.config;
+package com.myobservation.auth.security;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

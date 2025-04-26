@@ -1,4 +1,4 @@
-package com.myobservation.auth.config;
+package com.myobservation.auth.security;
 
 import com.myobservation.auth.entity.MyUser;
 import com.myobservation.auth.repository.MyUserRepository;
