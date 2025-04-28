@@ -3,7 +3,6 @@ package com.myobservation.fhir.controller;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.validation.FhirValidator;
-import ca.uhn.fhir.validation.SingleValidationMessage;
 import ca.uhn.fhir.validation.ValidationResult;
 import com.myobservation.auth.entity.MyUser;
 import com.myobservation.auth.repository.MyUserRepository;
@@ -39,6 +38,7 @@ public class FhirPractitionerController {
     public FhirPractitionerController(FhirContext fhirContext, FhirValidator fhirValidator,
                                       FhirPractitionerRepository fhirPractitionerRepository,
                                       MyUserRepository userRepository) {
+        log.info("Inicializando FhirPractitionerController");
         this.fhirContext = fhirContext;
         this.fhirValidator = fhirValidator;
         this.fhirPractitionerRepository = fhirPractitionerRepository;
@@ -96,6 +96,26 @@ public class FhirPractitionerController {
         } catch (Exception e) {
             log.error("Error creating practitioner", e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Collections.singletonMap("error", "Error: " + e.getMessage()));
+        }
+    }
+    // Nuevo endpoint: GET /api/practitioners/user/{userId}/profile
+    @GetMapping("/user/{userId}/profile")
+    public ResponseEntity<Map<String, ?>> getPractitionerProfileByUserId(@PathVariable Long userId) {
+        log.info("Recibiendo solicitud para obtener perfil del practicante con userId: {}", userId);
+        try {
+            Optional<FhirPractitionerEntity> entityOptional = fhirPractitionerRepository.findByUser_UserId(userId);
+            if (entityOptional.isPresent()) {
+                String practitionerJson = entityOptional.get().getResourcePractitionerJson();
+                return ResponseEntity.ok(Collections.singletonMap("resource", practitionerJson));
+            } else {
+                log.info("No practitioner profile found for userId: {}", userId);
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Collections.singletonMap("error", "Practitioner profile not found for user"));
+            }
+        } catch (Exception e) {
+            log.error("Error retrieving practitioner profile for userId: {}", userId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Collections.singletonMap("error", "Error: " + e.getMessage()));
         }
     }
     // Ejemplo de método para obtener el userId del contexto (si usas Spring Security):
