@@ -9,4 +9,4 @@ package com.myobservation.auth.security;
  * @param token Token de auth generado.
  * @param role Rol del usuario autenticado.
  */
-public record AuthResponse(String token, String role) {}
+public record AuthResponse(String token, String role, String userId) {}

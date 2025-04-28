@@ -19,7 +19,7 @@ import java.io.InputStream;
 
 /**
  * Clase de configuración para la validación de recursos FHIR en el sistema.
- * Las validaciones se realizan conta el structureDefinition en una implementación local.
+ * Las validaciones se realizan contra el StructureDefinition en una implementación local.
  */
 @Configuration
 public class FhirValidationConfig {
@@ -28,7 +28,7 @@ public class FhirValidationConfig {
 
     /**
      * Crea el contexto de FHIR en versión R4
-     * @return Instancia de {@link FhirContext},
+     * @return Instancia de {@link FhirContext}
      */
     @Bean
     public FhirContext fhirContext() {
@@ -39,13 +39,12 @@ public class FhirValidationConfig {
      * Carga el perfil personalizado desde un archivo JSON.
      * @param fhirContext Contexto de FHIR usado en la validación.
      * @param resourceLoader Carga el recurso desde el classpath.
-     * @return Insta de {@link PrePopulatedValidationSupport} con el perfil cargado.
+     * @return Instancia de {@link PrePopulatedValidationSupport} con el perfil cargado.
      * @throws IOException Si no se encuentra el perfil o hay errores en la carga.
      */
     @Bean
     public PrePopulatedValidationSupport prePopulatedValidationSupport(FhirContext fhirContext, ResourceLoader resourceLoader) throws IOException {
         PrePopulatedValidationSupport support = new PrePopulatedValidationSupport(fhirContext);
-        //String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-paciente-persistencia.json";
         String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-practitioner-persistencia.json";
         log.info("Resource file exists: {}", resourceLoader.getResource(resourcePath).exists());
 
@@ -56,7 +55,7 @@ public class FhirValidationConfig {
             }
             StructureDefinition structureDefinition = (StructureDefinition) fhirContext.newJsonParser().parseResource(inputStream);
             support.addStructureDefinition(structureDefinition);
-            log.info("Loaded StructureDefinition: mi-paciente-persistencia");
+            log.info("Loaded StructureDefinition: mi-practitioner-persistencia");
         } catch (IOException e) {
             log.error("Failed to load StructureDefinition: {}", e.getMessage());
             throw e;

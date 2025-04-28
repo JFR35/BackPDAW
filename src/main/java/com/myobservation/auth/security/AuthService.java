@@ -54,7 +54,7 @@ public class AuthService {
                 .findFirst()  // Solo se obtiene el primer rol
                 .map(grantedAuthority -> grantedAuthority.getAuthority())
                 .orElse("ROLE_USER");  // Default si no tiene rol
-
-        return new AuthResponse(token, role);
+        String userId = user.getUserId().toString();
+        return new AuthResponse(token, role, userId);
     }
 }
