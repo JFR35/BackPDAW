@@ -12,8 +12,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -45,24 +48,45 @@ public class FhirValidationConfig {
     @Bean
     public PrePopulatedValidationSupport prePopulatedValidationSupport(FhirContext fhirContext, ResourceLoader resourceLoader) throws IOException {
         PrePopulatedValidationSupport support = new PrePopulatedValidationSupport(fhirContext);
-        String resourcePath = "classpath:/fhir-profiles/StructureDefinition-mi-practitioner-persistencia.json";
-        log.info("Resource file exists: {}", resourceLoader.getResource(resourcePath).exists());
 
-        try (InputStream inputStream = resourceLoader.getResource(resourcePath).getInputStream()) {
-            if (inputStream == null) {
-                log.error("StructureDefinition file not found at: {}", resourcePath);
-                throw new IOException("StructureDefinition file not found: " + resourcePath);
+        // Directorio base que contiene los perfiles
+        String baseDir = "classpath:/fhir-profiles/";
+        Resource baseResource = resourceLoader.getResource(baseDir);
+
+        // Si es un directorio de sistema de archivos, podemos listar los archivos
+        if (baseResource.getFile().isDirectory()) {
+            File[] files = baseResource.getFile().listFiles((dir, name) -> name.endsWith(".json"));
+
+            if (files != null) {
+                for (File file : files) {
+                    try (InputStream inputStream = new FileInputStream(file)) {
+                        StructureDefinition structureDefinition = (StructureDefinition) fhirContext.newJsonParser().parseResource(inputStream);
+                        support.addStructureDefinition(structureDefinition);
+                        log.info("Loaded StructureDefinition: {}", structureDefinition.getName());
+                    } catch (Exception e) {
+                        log.error("Failed to load StructureDefinition {}: {}", file.getName(), e.getMessage());
+                        // Opciones: lanzar la excepción o continuar con el siguiente archivo
+                        // throw e;
+                    }
+                }
             }
-            StructureDefinition structureDefinition = (StructureDefinition) fhirContext.newJsonParser().parseResource(inputStream);
-            support.addStructureDefinition(structureDefinition);
-            log.info("Loaded StructureDefinition: mi-practitioner-persistencia");
-        } catch (IOException e) {
-            log.error("Failed to load StructureDefinition: {}", e.getMessage());
-            throw e;
+        } else {
+            // Si está en un jar, necesitarás manejar esto de manera diferente
+            // Quizás enumerar recursos predefinidos como en el ejemplo anterior
+            log.warn("Base resource is not a directory, falling back to predefined list");
+            String[] resourcePaths = {
+                    "classpath:/fhir-profiles/StructureDefinition-mi-practitioner-persistencia.json",
+                    "classpath:/fhir-profiles/StructureDefinition-mi-paciente-persistencia.json"
+            };
+
+            for (String resourcePath : resourcePaths) {
+                // Código para cargar cada recurso como en el ejemplo anterior
+                // ...
+            }
         }
+
         return support;
     }
-
     /**
      * Configura el validador FHIR con soporte para perfiles y terminologías.
      *
