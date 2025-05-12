@@ -68,10 +68,10 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
                 .authorizeHttpRequests(auth -> auth
                         // Para pruebas desproteger estos paths
-                        .requestMatchers("/api/auth/**","/api/patients/**", "/h2-console/**").permitAll()
+                        .requestMatchers("/api/auth/**","/api/patients/**", "/h2-console/**", "/fhir/**","/api/fhir/validate").permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "PRACTITIONER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/practitioner/**").hasRole("PRACTITIONER")
+                        .requestMatchers("/practitioner/**", "/api/fhir/patients/**", "/api/fhirbase/**").hasRole("PRACTITIONER")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())
