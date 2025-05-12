@@ -7,6 +7,7 @@ services:
       POSTGRES_DB: Testpdaw
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: Mm29Juanito
+      POSTGRES_INITDB_ARGS: --auth-host=md5
     ports:
       - "5432:5432"
     networks:
@@ -27,6 +28,7 @@ services:
       POSTGRES_DB: fb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: fhirpassword
+      POSTGRES_INITDB_ARGS: --auth-host=md5
     ports:
       - "5433:5432"
     networks:
@@ -48,10 +50,20 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://postgres:fhirpassword@fhirbase-db:5432/fb
+      PGHOST: fhirbase-db
+      PGPORT: 5432
+      PGDATABASE: fb
+      PGUSER: postgres
+      PGPASSWORD: fhirpassword
     ports:
       - "3000:3000"
     networks:
       - health-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/fhir"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   myobservation:
     build: .
@@ -61,11 +73,15 @@ services:
       postgres-jwt:
         condition: service_healthy
       fhirbase:
-        condition: service_started
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-jwt:5432/Testpdaw
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: Mm29Juanito
+      FHIR_DATASOURCE_URL: jdbc:postgresql://fhirbase-db:5432/fb
+      FHIR_DATASOURCE_USERNAME: postgres
+      FHIR_DATASOURCE_PASSWORD: fhirpassword
+      FHIRBASE_URL: http://fhirbase:3000/fhir
     ports:
       - "8085:8085"
     networks:

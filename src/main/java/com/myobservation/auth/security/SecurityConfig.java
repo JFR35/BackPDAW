@@ -71,7 +71,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/auth/**","/api/patients/**", "/h2-console/**", "/fhir/**","/api/fhir/validate").permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "PRACTITIONER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
-                        .requestMatchers("/practitioner/**", "/api/fhir/patients/**").hasRole("PRACTITIONER")
+                        .requestMatchers("/practitioner/**", "/api/fhir/patients/**", "/api/fhirbase/**").hasRole("PRACTITIONER")
                         .anyRequest().authenticated()
                 )
                 .authenticationProvider(authenticationProvider())

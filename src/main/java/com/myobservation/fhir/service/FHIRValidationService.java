@@ -16,7 +16,7 @@ import ca.uhn.fhir.parser.IParser;
 public class FHIRValidationService {
 
     private static final Logger logger = LoggerFactory.getLogger(FHIRValidationService.class);
-
+    //private static final String PROFILE_URL = "http://hl7.org/fhir/us/example/StructureDefinition/mi-paciente-persistencia";
     private final FhirValidator fhirValidator;
     private final FhirContext fhirContext;
     private final IParser jsonParser;
