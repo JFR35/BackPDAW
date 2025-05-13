@@ -1,4 +1,4 @@
-package com.myobservation.fhir.config;
+package com.myobservation.fhir.controller;
 
 import ca.uhn.fhir.validation.ValidationResult;
 import com.myobservation.fhir.service.FHIRBaseService;

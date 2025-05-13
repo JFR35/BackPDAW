@@ -35,7 +35,7 @@ public class FHIRStructureDefinitionLoader {
     @PostConstruct
     public void init() {
         String resourcePath = "fhir-profiles/mi-paciente-persistencia.json";
-
+        logger.info("Intentando cargar recurso desde: {}", resourcePath);
         try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
             if (inputStream == null) {
                 logger.error("❌ No se encontró el archivo '{}' en el classpath.", resourcePath);
@@ -43,10 +43,12 @@ public class FHIRStructureDefinitionLoader {
             }
 
             String jsonProfile = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            logger.info("✅ Recurso cargado exitosamente: {}", resourcePath);
             loadStructureDefinition(jsonProfile);
 
         } catch (Exception e) {
             logger.error("❌ Error al cargar el perfil FHIR desde el classpath: {}", resourcePath, e);
+            throw new RuntimeException("Error al cargar el StructureDefinition", e);
         }
     }
 
