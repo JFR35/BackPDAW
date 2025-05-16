@@ -1,6 +1,7 @@
 package com.myobservation.fhir.service;
 
 import ca.uhn.fhir.context.FhirContext;
+import ca.uhn.fhir.parser.IParser;
 import jakarta.annotation.PostConstruct;
 import org.hl7.fhir.common.hapi.validation.support.PrePopulatedValidationSupport;
 import org.hl7.fhir.common.hapi.validation.support.ValidationSupportChain;
@@ -9,49 +10,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ca.uhn.fhir.parser.IParser;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.util.List;
 
+/**
+ * Implementación del servicio para cargar las definiciones de estructura
+ */
 @Service
-public class FHIRStructureDefinitionLoader {
+public class StructureDefinitionLoaderServiceImpl implements StructureDefinitionLoader {
 
-    private static final Logger logger = LoggerFactory.getLogger(FHIRStructureDefinitionLoader.class);
+    private static final Logger logger = LoggerFactory.getLogger(StructureDefinitionLoaderServiceImpl.class);
 
     private final FhirContext fhirContext;
     private final IParser jsonParser;
     private final ValidationSupportChain validationSupportChain;
 
     @Autowired
-    public FHIRStructureDefinitionLoader(FhirContext fhirContext, ValidationSupportChain validationSupportChain) {
+    public StructureDefinitionLoaderServiceImpl(FhirContext fhirContext, ValidationSupportChain validationSupportChain) {
         this.fhirContext = fhirContext;
         this.jsonParser = fhirContext.newJsonParser();
         this.validationSupportChain = validationSupportChain;
     }
 
-    @PostConstruct
-    public void init() {
-        String resourcePath = "fhir-profiles/mi-paciente-persistencia.json";
-        logger.info("Intentando cargar recurso desde: {}", resourcePath);
-        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-            if (inputStream == null) {
-                logger.error("No se encontró el archivo '{}' en el classpath.", resourcePath);
-                return;
-            }
-
-            String jsonProfile = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
-            logger.info("✅ Recurso cargado exitosamente: {}", resourcePath);
-            loadStructureDefinition(jsonProfile);
-
-        } catch (Exception e) {
-            logger.error("Error al cargar el perfil FHIR desde el classpath: {}", resourcePath, e);
-            throw new RuntimeException("Error al cargar el StructureDefinition", e);
-        }
-    }
 
     public void loadStructureDefinition(String jsonProfile) {
         try {
@@ -62,12 +45,60 @@ public class FHIRStructureDefinitionLoader {
 
             validationSupportChain.addValidationSupport(prePopulatedValidationSupport);
 
-            logger.info("✅ StructureDefinition '{}' precargado correctamente en HAPI FHIR.",
+            logger.info("StructureDefinition '{}' precargado correctamente en HAPI FHIR.",
                     structureDefinition.getUrl());
         } catch (Exception e) {
             logger.error("Error al cargar el StructureDefinition en HAPI FHIR", e);
         }
     }
+
+    @Override
+    public String loadJsonProfileFromClasspath(String resourcePath) throws IOException {
+        try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+            if (inputStream == null) {
+                throw new IOException("No se encontró el archivo '" + resourcePath + "' en el classpath.");
+            }
+            return new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+        }
+    }
+
+
+    @PostConstruct
+    public void init() {
+        logger.info("INIT StructureDefinitionLoaderServiceImpl...");
+
+        List<String> profiles = List.of(
+                "fhir-profiles/mi-paciente-persistencia.json",
+                "fhir-profiles/mi-practitioner-persistencia.json"
+        );
+
+        PrePopulatedValidationSupport prePopulatedSupport = new PrePopulatedValidationSupport(fhirContext);
+
+        for (String resourcePath : profiles) {
+            try (InputStream inputStream = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+                if (inputStream == null) {
+                    logger.error("No se encontró el archivo '{}' en el classpath.", resourcePath);
+                    continue;
+                }
+
+                String jsonProfile = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+                StructureDefinition structureDefinition = jsonParser.parseResource(StructureDefinition.class, jsonProfile);
+                prePopulatedSupport.addStructureDefinition(structureDefinition);
+
+                logger.info("Recurso '{}' cargado exitosamente.", resourcePath);
+            } catch (Exception e) {
+                logger.error("Error al cargar el perfil FHIR desde el classpath: {}", resourcePath, e);
+                throw new RuntimeException("Error al cargar el StructureDefinition: " + resourcePath, e);
+            }
+        }
+
+        validationSupportChain.addValidationSupport(prePopulatedSupport);
+        fhirContext.setValidationSupport(validationSupportChain);
+
+        logger.info("Carga de StructureDefinitions completada.");
+    }
+}
+
     /* Ruta para cargar localmente el structureDefinition
     @PostConstruct
     public void init() {
@@ -97,4 +128,4 @@ public class FHIRStructureDefinitionLoader {
     }
 
      */
-}
+
