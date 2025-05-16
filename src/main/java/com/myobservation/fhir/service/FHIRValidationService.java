@@ -33,7 +33,7 @@ public class FHIRValidationService {
             Patient patient = jsonParser.parseResource(Patient.class, jsonPatient);
 
             if (fhirContext.getValidationSupport().fetchStructureDefinition("http://hl7.org/fhir/us/example/StructureDefinition/mi-paciente-persistencia") == null) {
-                logger.error("❌ Error: `StructureDefinition` no encontrado en HAPI FHIR.");
+                logger.error("Error: `StructureDefinition` no encontrado en HAPI FHIR.");
                 return null;
             }
 
@@ -51,26 +51,26 @@ public class FHIRValidationService {
                 .fetchStructureDefinition("http://hl7.org/fhir/us/example/StructureDefinition/mi-paciente-persistencia");
 
         if (structureDefinition == null) {
-            System.out.println("❌ Error: `StructureDefinition` no encontrado en HAPI FHIR.");
+            System.out.println("Error: `StructureDefinition` no encontrado en HAPI FHIR.");
         } else {
-            System.out.println("✅ `StructureDefinition` cargado correctamente en HAPI FHIR.");
+            System.out.println("`StructureDefinition` cargado correctamente en HAPI FHIR.");
         }
     }
 
 
     private void logValidationResults(ValidationResult result) {
         if (result.isSuccessful()) {
-            logger.info("✅ Validación exitosa");
+            logger.info("Validación exitosa");
         } else {
-            logger.warn("❌ La validación ha fallado con {} errores/advertencias", result.getMessages().size());
+            logger.warn("La validación ha fallado con {} errores/advertencias", result.getMessages().size());
 
             result.getMessages().forEach(message -> {
                 if (message.getSeverity() == ResultSeverityEnum.ERROR) {
-                    logger.error("❌ ERROR: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
+                    logger.error("ERROR: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
                 } else if (message.getSeverity() == ResultSeverityEnum.WARNING) {
-                    logger.warn("⚠️ ADVERTENCIA: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
+                    logger.warn("ADVERTENCIA: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
                 } else {
-                    logger.info("ℹ️ INFO: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
+                    logger.info("INFO: {} - En ubicación: {}", message.getMessage(), message.getLocationString());
                 }
             });
         }
