@@ -25,7 +25,7 @@ public class FHIRValidationController {
             return ResponseEntity.badRequest().body(result.getMessages());
         }
 
-        return ResponseEntity.ok("✅ Patient validado con éxito");
+        return ResponseEntity.ok("Patient validado con éxito");
     }
 
 }

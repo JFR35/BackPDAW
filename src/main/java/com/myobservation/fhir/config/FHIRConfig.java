@@ -11,15 +11,16 @@ import org.springframework.context.annotation.Configuration;
 public class FHIRConfig {
 
     @Bean
+    public ValidationSupportChain validationSupportChain(FhirContext fhirContext) {
+        ValidationSupportChain chain = new ValidationSupportChain();
+        chain.addValidationSupport(new PrePopulatedValidationSupport(fhirContext));
+        fhirContext.setValidationSupport(chain);
+        return chain;
+    }
+
+    @Bean
     public FhirContext fhirContext() {
-        FhirContext fhirContext = FhirContext.forR4();
-
-        ValidationSupportChain validationSupportChain = new ValidationSupportChain();
-        validationSupportChain.addValidationSupport(new PrePopulatedValidationSupport(fhirContext));
-
-        fhirContext.setValidationSupport(validationSupportChain);
-
-        return fhirContext;
+        return FhirContext.forR4();
     }
 
     @Bean

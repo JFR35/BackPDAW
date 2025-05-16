@@ -9,6 +9,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 
+/**
+ * Clase para validad locamente un Recurso Patient contra mi
+ * StructureDefinition con HAPI FHIR, sin almacenar nada y sin
+ * conectar a FHIRBase con contenedor Docker
+ */
 @RestController
 @RequestMapping("/api/fhir")
 public class FhirController {
