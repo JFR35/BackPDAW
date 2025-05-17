@@ -1,6 +1,7 @@
 package com.myobservation.fhir.controller;
 
 import ca.uhn.fhir.validation.ValidationResult;
+import com.myobservation.fhir.common.FHIRConstants;
 import com.myobservation.fhir.service.FHIRBaseService;
 import com.myobservation.fhir.service.FHIRValidationService;
 import org.slf4j.Logger;
@@ -31,29 +32,47 @@ public class FHIRBaseController {
     @PostMapping("/Patient")
     public ResponseEntity<?> storePatient(@RequestBody String jsonPatient) {
         logger.info("Recibida solicitud para almacenar Patient");
-
         ValidationResult result = validationService.validatePatient(jsonPatient);
-
         if (result == null) {
             logger.error("Error: Resultado de validación es null");
-            return ResponseEntity.badRequest().body("Error: Resultado de validación es null");
+            return ResponseEntity.badRequest().body("Error: Resultado de validación es nulo");
         }
-
         if (!result.isSuccessful()) {
             logger.warn("Validación fallida para Patient");
             return ResponseEntity.badRequest().body(result.getMessages());
         }
-
         try {
-            String response = fhirBaseService.storePatient(jsonPatient);
-            logger.info("Patient almacenado exitosamente");
-            return ResponseEntity.ok("Patient almacenado: " + response);
+            String response = fhirBaseService.storeResource(FHIRConstants.PATIENT_RESOURCE_TYPE, jsonPatient);
+
+            logger.info("Paciente almacenado exitosamente");
+            return ResponseEntity.ok("Paciente almacenado: " + response);
         } catch (Exception e) {
             logger.error("Error al almacenar Patient", e);
             return ResponseEntity.internalServerError().body("Error al almacenar Patient: " + e.getMessage());
         }
     }
 
+    @PostMapping("/Practitioner")
+    public ResponseEntity<?> storePractitioner(@RequestBody String jsonPractitioner) {
+        logger.info("Recibida solicitud para almacenar Practitioner");
+        ValidationResult result = validationService.validatePractitioner(jsonPractitioner);
+        if (result == null) {
+            logger.error("Error: Resultado de validación es null");
+            return ResponseEntity.badRequest().body("Error: Resultado de validación es nulo");
+        }
+        if (!result.isSuccessful()) {
+            logger.warn("Validación fallida para Practitioner");
+            return ResponseEntity.badRequest().body(result.getMessages());
+        }
+        try {
+            String response = fhirBaseService.storeResource(FHIRConstants.PRACTITIONER_RESOURCE_TYPE, jsonPractitioner);
+            logger.info("Practitioner almacenado exitosamente");
+            return ResponseEntity.ok("Practitioner almacenado: " + response);
+        } catch (Exception e) {
+            logger.error("Error al almacenar Practitioner", e);
+            return ResponseEntity.internalServerError().body("Error al almacenar Practitioner: " + e.getMessage());
+        }
+    }
     /**
      * Endpoint genérico para almacenar recursos FHIR
      *

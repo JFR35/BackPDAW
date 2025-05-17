@@ -3,9 +3,10 @@ package com.myobservation.fhir.service;
 import ca.uhn.fhir.context.FhirContext;
 import ca.uhn.fhir.parser.IParser;
 import ca.uhn.fhir.validation.FhirValidator;
-import ca.uhn.fhir.validation.ResultSeverityEnum;
 import ca.uhn.fhir.validation.ValidationResult;
+import com.myobservation.fhir.common.FHIRConstants;
 import org.hl7.fhir.r4.model.Patient;
+import org.hl7.fhir.r4.model.Practitioner;
 import org.hl7.fhir.r4.model.Resource;
 import org.hl7.fhir.r4.model.StructureDefinition;
 import org.slf4j.Logger;
@@ -37,9 +38,15 @@ public class FHIRValidationService {
      * @param jsonPatient JSON del paciente a validar
      * @return Resultado de la validación
      */
+
     public ValidationResult validatePatient(String jsonPatient) {
-        return validateResource(jsonPatient, Patient.class, "http://hl7.org/fhir/us/example/StructureDefinition/mi-paciente-persistencia");
+        return validateResource(jsonPatient, Patient.class, FHIRConstants.PATIENT_PROFILE_URL);
     }
+
+    public ValidationResult validatePractitioner(String jsonPractitioner) {
+        return validateResource(jsonPractitioner, Practitioner.class, FHIRConstants.PRACTITIONER_PROFILE_URL);
+    }
+
 
     /**
      * Método genérico para validar cualquier tipo de recurso FHIR
