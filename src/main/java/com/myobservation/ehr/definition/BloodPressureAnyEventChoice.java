@@ -1,4 +1,4 @@
-package com.myobservation.ehr.model.definition;
+package com.myobservation.ehr.definition;
 
 import com.nedap.archie.rm.archetyped.FeederAudit;
 import com.nedap.archie.rm.datastructures.Cluster;

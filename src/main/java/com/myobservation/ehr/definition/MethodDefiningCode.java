@@ -1,4 +1,4 @@
-package com.myobservation.ehr.model.definition;
+package com.myobservation.ehr.definition;
 
 public class MethodDefiningCode {
 }

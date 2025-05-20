@@ -1,4 +1,4 @@
-package com.myobservation.ehr.model.definition;
+package com.myobservation.ehr.definition;
 
 import javax.annotation.processing.Generated;
 import org.ehrbase.openehr.sdk.generator.commons.annotations.Entity;

@@ -1,4 +1,4 @@
-package com.myobservation.ehr.model.definition;
+package com.myobservation.ehr.definition;
 
 import java.lang.String;
 import javax.annotation.processing.Generated;
@@ -14,7 +14,7 @@ import org.ehrbase.openehr.sdk.generator.commons.interfaces.RMEntity;
     comments = "https://github.com/ehrbase/openEHR_SDK Version: 2.23.0-SNAPSHOT"
 )
 @OptionFor("DV_TEXT")
-public class BloodPressureLocationOfMeasurementDvText implements RMEntity, com.myobservation.ehr.model.definition.BloodPressureLocationOfMeasurementChoice {
+public class BloodPressureLocationOfMeasurementDvText implements RMEntity, BloodPressureLocationOfMeasurementChoice {
   /**
    * Path: Presión Sanguínea/Blood pressure/Location of measurement/Location of measurement
    * Description: Simple body site where blood pressure was measured.
