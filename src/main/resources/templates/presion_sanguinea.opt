@@ -33,9 +33,9 @@
         <value>05cc7c25-e33c-445f-a56d-de2df1bb48c9</value>
     </uid>
     <template_id>
-        <value>Presión Sanguínea</value>
+        <value>Presion Sanguinea</value>
     </template_id>
-    <concept>Presión Sanguínea</concept>
+    <concept>Presion Sangunea</concept>
     <definition>
         <rm_type_name>COMPOSITION</rm_type_name>
         <occurrences>
@@ -1492,10 +1492,10 @@
             <value>openEHR-EHR-COMPOSITION.report.v1</value>
         </archetype_id>
         <template_id>
-            <value>Presión Sanguínea</value>
+            <value>Presion Sanguinea</value>
         </template_id>
         <term_definitions code="at0000">
-            <items id="text">Presión Sanguínea</items>
+            <items id="text">Presion Sanguinea</items>
             <items id="description">Document to communicate information to others, commonly in response to a request from another party.</items>
         </term_definitions>
         <term_definitions code="at0001">

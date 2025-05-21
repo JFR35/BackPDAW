@@ -29,6 +29,13 @@
 		<java.version>17</java.version>
 		<spring-modulith.version>1.3.4</spring-modulith.version>
 	</properties>
+	<repositories>
+		<repository>
+			<id>jitpack.io</id>
+			<url>https://jitpack.io</url>
+		</repository>
+	</repositories>
+
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -39,7 +46,6 @@
 			<artifactId>jakarta.persistence-api</artifactId>
 			<version>3.1.0</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-hateoas</artifactId>
@@ -170,11 +176,6 @@
 			<version>2.22.0</version>
 		</dependency>
 		<dependency>
-			<groupId>org.ehrbase.openehr.sdk</groupId>
-			<artifactId>client</artifactId>
-			<version>2.23.0-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>2.0.1.Final</version>
@@ -197,16 +198,8 @@
 			<version>24.0.0</version>
 			<scope>compile</scope>
 		</dependency>
-		<dependency>
-			<groupId>jakarta.validation</groupId>
-			<artifactId>jakarta.validation-api</artifactId>
-			<version>2.0.2</version>
-		</dependency>
-		<dependency>
-			<groupId>jakarta.validation</groupId>
-			<artifactId>jakarta.validation-api</artifactId>
-			<version>3.0.2</version>
-		</dependency>
+
+
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>response-dto</artifactId>
@@ -225,6 +218,24 @@
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>opt-1.4</artifactId>
+			<version>2.22.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jdk8</artifactId>
+			<version>2.15.2</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ehrbase.openehr.sdk</groupId>
+			<artifactId>client</artifactId>
+			<version>2.22.0</version>
+		</dependency>
+
+		<!-- Serialización (JSON/XML) -->
+		<dependency>
+			<groupId>org.ehrbase.openehr.sdk</groupId>
+			<artifactId>serialisation</artifactId>
 			<version>2.22.0</version>
 		</dependency>
 
