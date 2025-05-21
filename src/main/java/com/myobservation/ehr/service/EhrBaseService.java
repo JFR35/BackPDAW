@@ -1,5 +1,7 @@
 package com.myobservation.ehr.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myobservation.ehr.model.BloodPressureRequestDTO;
 import com.myobservation.ehr.definition.PresionSanguineaComposition;
 import com.myobservation.ehr.definition.BloodPressureObservation;
@@ -7,20 +9,28 @@ import com.myobservation.ehr.definition.BloodPressureAnyEventPointEvent;
 import com.myobservation.ehr.definition.MethodDefiningCode;
 import com.myobservation.ehr.definition.BloodPressureLocationOfMeasurementDvCodedText;
 import com.myobservation.ehr.definition.LocationOfMeasurementDefiningCode;
+import com.nedap.archie.rm.composition.Composition;
 import com.nedap.archie.rm.generic.PartyIdentified;
 import com.nedap.archie.rm.generic.PartySelf;
 import jakarta.annotation.PostConstruct;
+import javassist.NotFoundException;
 import org.ehrbase.openehr.sdk.client.openehrclient.EhrEndpoint;
 import org.ehrbase.openehr.sdk.client.openehrclient.OpenEhrClient;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Category;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Language;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Setting;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Territory;
+import org.ehrbase.openehr.sdk.response.dto.ehrscape.WebTemplate;
 import org.ehrbase.openehr.sdk.webtemplate.templateprovider.TemplateProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
 import java.time.ZoneOffset;
@@ -172,6 +182,128 @@ public class EhrBaseService {
         } catch (Exception e) {
             logger.error("Failed to save composition to EHRBase", e);
             throw new RuntimeException("Failed to save composition to EHRBase", e);
+        }
+    }
+
+    private UUID extractCompositionUuid(String compositionId) {
+        // El compositionId puede venir en formato "UUID::domain::version"
+        // Extraemos solo la parte UUID
+        String[] parts = compositionId.split("::");
+        return UUID.fromString(parts[0]);
+    }
+
+    public String getComposition(String ehrId, String compositionId, String format) throws NotFoundException {
+        try {
+            UUID ehrUUID = validateAndParseUUID(ehrId, "EHR ID");
+            UUID compositionUUID = extractCompositionUuid(compositionId);
+
+            // Opciones para diferentes formatos
+            if ("RAW".equalsIgnoreCase(format)) {
+                Composition rawComposition = openEhrClient.compositionEndpoint(ehrUUID)
+                        .findRaw(compositionUUID)
+                        .orElseThrow(() -> new NotFoundException("Composition not found"));
+                return new ObjectMapper().writeValueAsString(rawComposition);
+            } else if ("FLAT".equalsIgnoreCase(format)) {
+                // Alternativa para obtener en formato FLAT
+                return getCompositionAsFlatJson(ehrUUID, compositionUUID);
+            } else {
+                // Por defecto devolvemos la composición en formato estructurado
+                PresionSanguineaComposition composition = openEhrClient.compositionEndpoint(ehrUUID)
+                        .find(compositionUUID, PresionSanguineaComposition.class)
+                        .orElseThrow(() -> new NotFoundException("Composition not found"));
+                return new ObjectMapper().writeValueAsString(composition);
+            }
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Error processing composition JSON", e);
+        } catch (NotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve composition", e);
+            throw new RuntimeException("Failed to retrieve composition", e);
+        }
+    }
+
+    private UUID validateAndParseUUID(String uuid, String fieldName) {
+        try {
+            return UUID.fromString(uuid);
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Invalid " + fieldName + " format");
+        }
+    }
+
+    private void validateCompositionId(String compositionId) {
+        if (compositionId == null || compositionId.isEmpty()) {
+            throw new IllegalArgumentException("Composition ID cannot be empty");
+        }
+        // Aquí podrías añadir más validaciones específicas para el formato de compositionId
+    }
+
+    public String getComposition(String ehrId, String compositionId) {
+        try {
+            // Validar parámetros
+            if (ehrId == null || compositionId == null) {
+                throw new IllegalArgumentException("ehrId and compositionId are required");
+            }
+
+            // Configurar la llamada a la API REST de EHRbase
+            RestTemplate restTemplate = new RestTemplate();
+            String ehrbaseUrl = String.format("%s/rest/openehr/v1/ehr/%s/composition/%s?format=FLAT",
+                    this.ehrBaseUrl, ehrId, compositionId);
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(ehrBaseUsername, ehrBasePassword);
+            headers.set("Accept", "application/openehr.wt.flat.schema+json");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Hacer la solicitud GET
+            String flatComposition = restTemplate.exchange(ehrbaseUrl, HttpMethod.GET, entity, String.class).getBody();
+
+            logger.info("Retrieved composition with ID: {} for EHR: {}", compositionId, ehrId);
+            return flatComposition;
+
+        } catch (IllegalArgumentException e) {
+            logger.error("Invalid input parameters: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            logger.error("Failed to retrieve composition with ID: {} for EHR: {}", compositionId, ehrId, e);
+            throw new RuntimeException("Failed to retrieve composition from EHRbase", e);
+        }
+    }
+
+    private String convertCompositionToFormat(Composition composition, String format) throws JsonProcessingException {
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        if ("RAW".equalsIgnoreCase(format)) {
+            return objectMapper.writeValueAsString(composition);
+        } else if ("STRUCTURED".equalsIgnoreCase(format)) {
+            // Implementar conversión a formato estructurado si es necesario
+            return objectMapper.writeValueAsString(composition);
+        } else {
+            // Por defecto FLAT
+            return objectMapper.writeValueAsString(composition);
+        }
+    }
+    private String getCompositionAsFlatJson(UUID ehrUUID, UUID compositionUUID) {
+        try {
+            // Configurar la llamada a la API REST de EHRbase
+            RestTemplate restTemplate = new RestTemplate();
+            String ehrbaseUrl = String.format("%s/rest/openehr/v1/ehr/%s/composition/%s?format=FLAT",
+                    this.ehrBaseUrl, ehrUUID.toString(), compositionUUID.toString());
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setBasicAuth(ehrBaseUsername, ehrBasePassword);
+            headers.set("Accept", "application/openehr.wt.flat.schema+json");
+            HttpEntity<String> entity = new HttpEntity<>(headers);
+
+            // Hacer la solicitud GET
+            String flatComposition = restTemplate.exchange(ehrbaseUrl, HttpMethod.GET, entity, String.class).getBody();
+
+            logger.info("Retrieved FLAT composition for EHR: {} with composition ID: {}", ehrUUID, compositionUUID);
+            return flatComposition;
+
+        } catch (Exception e) {
+            logger.error("Failed to retrieve FLAT composition for EHR: {} with composition ID: {}", ehrUUID, compositionUUID, e);
+            throw new RuntimeException("Failed to retrieve FLAT composition from EHRbase", e);
         }
     }
 }
