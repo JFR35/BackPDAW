@@ -1,5 +1,11 @@
 volumes:
   postgres_data: {}
+  postgres_ehrbase_data: {}
+
+networks:
+  ehr_network:
+    driver: bridge
+
 services:
   postgres:
     image: postgres:17
@@ -14,6 +20,9 @@ services:
       POSTGRES_PORT: '5432'
       POSTGRES_DB: aidbox
       POSTGRES_PASSWORD: tF5MdpRxZ9
+    networks:
+      - ehr_network
+
   aidbox:
     image: healthsamurai/aidboxone:edge
     pull_policy: always
@@ -38,7 +47,7 @@ services:
       BOX_FHIR_SEARCH_CHAIN_SUBSELECT: true
       BOX_FHIR_SEARCH_COMPARISONS: true
       BOX_FHIR_TERMINOLOGY_SERVICE_BASE_URL: https://tx.health-samurai.io/fhir
-      BOX_LICENSE: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvZmZsaW5lIjpmYWxzZSwiY3JlYXRvciI6eyJpZCI6IjQ3YTFiNjkwLTVmNDUtNDMzOS1iODU3LTllMzNlYjcwMzAwMCIsInJlc291cmNlVHlwZSI6IlVzZXIifSwia2V5Ijoib25saW5lLTIwMjIwNTI0LTE0MzY0NyIsIm5hbWUiOiJBaWRCb3hNeU9ic2VydmF0aW9uIiwiZXhwaXJhdGlvbiI6IjIxMjQtMDQtMTlUMDk6MDM6NTUuNjI3WiIsInR5cGUiOiJkZXZlbG9wbWVudCIsImNyZWF0ZWQiOiIyMDI1LTA1LTEzVDA5OjAzOjU1LjYyN1oiLCJtYXgtaW5zdGFuY2VzIjoyLCJtYXgtZGItc2l6ZSI6NTM2ODcwOTEyMCwicHJvZHVjdCI6ImFpZGJveCIsInByb2plY3QiOnsiaWQiOiIzZTNmMmQ3My1iNTZmLTQzMzEtOWYyMC0zMmZjMGJmZjRlN2IiLCJyZXNvdXJjZVR5cGUiOiJQcm9qZWN0In0sInN0YXR1cyI6ImFjdGl2ZSIsImlkIjoiMTAyZDJkMTctZDM1My00OGIzLWFkZTAtMzY4NjVmMzk4ODBhIiwiaW5mbyI6eyJnb2FsIjoiZGV2ZWxvcG1lbnQiLCJob3N0aW5nIjoic2VsZi1ob3N0ZWQifSwiaXNzdWVyIjoiaHR0cHM6Ly9haWRib3guYXBwIn0.iA0dXFROMyZ_zyrpuas8hOLvyJw-MsD8yIkAFAOBKIcBOnu_Nw5i_8MZutkt_rx_Po98AINOStSrOVPemZp9q33smJApUJuXJgSxWNH_ib2_UsBW453NGmBphevu7aDCfV71CSzi8k91VA-BWzIzSv6g7rGeobm7Qfz_d5oAImA
+      BOX_LICENSE: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJvZmZsaW5lIjpmYWxzZSwiY3JlYXRvciI6eyJpZCI6IjQ3YTFiNjkwLTVmNDUtNDMzOS1iODU3LTllMzNlYjcwMzAwMCIsInJlc291cmNlVHlwZSI6IlVzZXIifSwia2V5Ijoib25saW5lLTIwMjIwNTI0LTE0MzY0NyIsIm5hbWUiOiJBaWRCb3hNeU9ic2VydmF0aW9uIiwiZXhwaXJhdGlvbiI6IjIxMjQtMDQtMTlUMDk6MDM6NTUuNjI3WiIsInR5cGUiOiJkZXZlbG9wbWVudCIsImNyZWF0ZWQiOiIyMDI1LTA1LTEzVDA5OjAzOjU1LjYyN1oiLCJtYXgtaW5zdGFuY2VzIjoyLCJtYXgtZGItc2l6ZSI6NTM2ODcwOTEyMCwicHJvZHVjdCI6ImFpZGJveCIsInByb2plY3QiOnsiaWQiOiIzZTNmMmQ3My1iNTZmLTQzMzEtOWYyMC0zMmZjMGJmZjRlN2IiLCJyZXNvdXJjZVR5cGUiOiJQcm9qZWN0In0sInN0YXR1cyI6ImFjdGl2ZSIsImlkIjoiMTAyZDJkMTctZDM1My00OGIzLWFkZTAtMzY4NjVmMzk4ODBhIiwiaW5mbyI6eyJnb2FsIjoiZGV2ZWxvcG1lbnQiLCJob3N0aW5nIjoic2VsZi1ob3N0ZWQifSwiaXNzdWVyIjoiaHR0cHM6Ly9haWRib3guYXBwIn0.iA0dXFROMyZ_zyrpuas8hOLvyJw-MsD8yIkAFAOBKIcBOnu_Nw5i_8MZutkt_rx_Po98AINOStSrOVPemZp9q33smJApUJuXJgSxWNH_ib2_UsBW453NGmBphevu7aDCfV71CSzi8k91VA-BWzIzSv6g7rGeobm7Qfz_d5oAImA"
       BOX_ROOT_CLIENT_SECRET: _rC3KbnOvW
       BOX_SEARCH_INCLUDE_CONFORMANT: true
       BOX_SECURITY_AUDIT_LOG_ENABLED: true
@@ -46,3 +55,36 @@ services:
       BOX_SETTINGS_MODE: read-write
       BOX_WEB_BASE_URL: http://localhost:8080
       BOX_WEB_PORT: 8080
+    networks:
+      - ehr_network
+
+  postgres_ehrbase:
+    image: ehrbase/ehrbase-v2-postgres:16.2
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      EHRBASE_USER: ehrbase_restricted
+      EHRBASE_PASSWORD: ehrbase_restricted
+      EHRBASE_USER_ADMIN: ehrbase
+      EHRBASE_PASSWORD_ADMIN: ehrbase
+    volumes:
+      - postgres_ehrbase_data:/var/lib/postgresql/data
+    networks:
+      - ehr_network
+
+  ehrbase:
+    image: ehrbase/ehrbase
+    depends_on:
+      - postgres_ehrbase
+    environment:
+      DB_URL: jdbc:postgresql://postgres_ehrbase:5432/ehrbase
+      DB_USER: ehrbase_restricted
+      DB_PASS: ehrbase_restricted
+      DB_USER_ADMIN: ehrbase
+      DB_PASS_ADMIN: ehrbase
+      SERVER_NODENAME: local.ehrbase.org
+      SPRING_PROFILES_ACTIVE: local
+    ports:
+      - 8089:8080
+    networks:
+      - ehr_network

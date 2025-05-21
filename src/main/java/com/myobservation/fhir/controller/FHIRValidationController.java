@@ -9,6 +9,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Esta clase solo valida el recurso sin persistencia
+ */
 @RestController
 @RequestMapping("/api/fhir")
 public class FHIRValidationController {
