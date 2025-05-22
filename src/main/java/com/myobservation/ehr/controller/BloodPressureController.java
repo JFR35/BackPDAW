@@ -2,9 +2,7 @@ package com.myobservation.ehr.controller;
 
 import com.myobservation.ehr.model.BloodPressureRequestDTO;
 import jakarta.validation.Valid;
-import javassist.NotFoundException;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

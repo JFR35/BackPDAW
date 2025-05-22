@@ -1,4 +1,4 @@
-package com.myobservation.ehr.definition;
+package com.myobservation.ehr.pojos.definition;
 
 import com.nedap.archie.rm.archetyped.FeederAudit;
 import com.nedap.archie.rm.datastructures.Cluster;

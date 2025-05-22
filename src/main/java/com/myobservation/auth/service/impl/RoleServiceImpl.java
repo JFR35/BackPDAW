@@ -61,6 +61,5 @@ public class RoleServiceImpl implements RoleService {
 
         // Asignar los roles al usuario
         user.setRoles(rolesToAssign);
-
     }
 }

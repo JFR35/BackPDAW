@@ -2,13 +2,9 @@ package com.myobservation.ehr.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.myobservation.ehr.pojos.BloodPressureComposition;
 import com.myobservation.ehr.model.BloodPressureRequestDTO;
-import com.myobservation.ehr.definition.PresionSanguineaComposition;
-import com.myobservation.ehr.definition.BloodPressureObservation;
-import com.myobservation.ehr.definition.BloodPressureAnyEventPointEvent;
-import com.myobservation.ehr.definition.MethodDefiningCode;
-import com.myobservation.ehr.definition.BloodPressureLocationOfMeasurementDvCodedText;
-import com.myobservation.ehr.definition.LocationOfMeasurementDefiningCode;
+import com.myobservation.ehr.pojos.definition.*;
 import com.nedap.archie.rm.composition.Composition;
 import com.nedap.archie.rm.generic.PartyIdentified;
 import com.nedap.archie.rm.generic.PartySelf;
@@ -20,7 +16,6 @@ import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Category;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Language;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Setting;
 import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Territory;
-import org.ehrbase.openehr.sdk.response.dto.ehrscape.WebTemplate;
 import org.ehrbase.openehr.sdk.webtemplate.templateprovider.TemplateProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -42,7 +36,7 @@ import java.util.UUID;
 public class EhrBaseService {
 
     private static final Logger logger = LoggerFactory.getLogger(EhrBaseService.class);
-    private static final String TEMPLATE_ID = "Presion Sanguinea";
+    private static final String TEMPLATE_ID = "blood_pressure";
 
     private final OpenEhrClient openEhrClient;
     private final TemplateProvider templateProvider;
@@ -103,7 +97,7 @@ public class EhrBaseService {
                 throw new RuntimeException("La plantilla 'presion_sanguinea' no está registrada en EHRbase.");
             }
             UUID ehrUUID = ehrId != null ? UUID.fromString(ehrId) : createPatientEhr(requestDTO.getPatientId());
-            PresionSanguineaComposition composition = createBPComposition(requestDTO, ehrUUID);
+            BloodPressureComposition composition = createBPComposition(requestDTO, ehrUUID);
             return saveComposition(composition, ehrUUID);
         } catch (Exception e) {
             throw new RuntimeException("Failed to create blood pressure composition", e);
@@ -121,8 +115,8 @@ public class EhrBaseService {
         }
     }
 
-    private PresionSanguineaComposition createBPComposition(BloodPressureRequestDTO requestDTO, UUID ehrId) {
-        PresionSanguineaComposition composition = new PresionSanguineaComposition();
+    private BloodPressureComposition createBPComposition(BloodPressureRequestDTO requestDTO, UUID ehrId) {
+        BloodPressureComposition composition = new BloodPressureComposition();
 
         composition.setLanguage(Language.EN);
         composition.setTerritory(Territory.ES);
@@ -159,22 +153,15 @@ public class EhrBaseService {
             // event.setMeanArterialPressureMagnitude(requestDTO.getMeanArterialPressure());
             // event.setMeanArterialPressureUnits("mm[Hg]");
         }
-
-        if (requestDTO.getPulseRate() != null) {
-            // Descomentar si los métodos existen
-            // event.setPulseRateMagnitude(requestDTO.getPulseRate());
-            // event.setPulseRateUnits("/min");
-        }
-
         bpObservation.setAnyEvent(Collections.singletonList(event));
         composition.setBloodPressure(bpObservation);
 
         return composition;
     }
 
-    private String saveComposition(PresionSanguineaComposition composition, UUID ehrId) {
+    private String saveComposition(BloodPressureComposition composition, UUID ehrId) {
         try {
-            PresionSanguineaComposition savedComposition = openEhrClient.compositionEndpoint(ehrId)
+            BloodPressureComposition savedComposition = openEhrClient.compositionEndpoint(ehrId)
                     .mergeCompositionEntity(composition);
             String compositionId = savedComposition.getVersionUid().getValue();
             logger.info("Composition saved with ID: {}", compositionId);
@@ -208,8 +195,8 @@ public class EhrBaseService {
                 return getCompositionAsFlatJson(ehrUUID, compositionUUID);
             } else {
                 // Por defecto devolvemos la composición en formato estructurado
-                PresionSanguineaComposition composition = openEhrClient.compositionEndpoint(ehrUUID)
-                        .find(compositionUUID, PresionSanguineaComposition.class)
+                BloodPressureComposition composition = openEhrClient.compositionEndpoint(ehrUUID)
+                        .find(compositionUUID, BloodPressureComposition.class)
                         .orElseThrow(() -> new NotFoundException("Composition not found"));
                 return new ObjectMapper().writeValueAsString(composition);
             }

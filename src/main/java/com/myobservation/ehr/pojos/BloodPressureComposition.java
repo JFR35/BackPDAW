@@ -1,5 +1,6 @@
-package com.myobservation.ehr.definition;
+package com.myobservation.ehr.pojos;
 
+import com.myobservation.ehr.pojos.definition.BloodPressureObservation;
 import com.nedap.archie.rm.archetyped.FeederAudit;
 import com.nedap.archie.rm.datastructures.Cluster;
 import com.nedap.archie.rm.generic.Participation;
@@ -26,45 +27,32 @@ import org.ehrbase.openehr.sdk.generator.commons.shareddefinition.Territory;
 @Archetype("openEHR-EHR-COMPOSITION.report.v1")
 @Generated(
     value = "org.ehrbase.openehr.sdk.generator.ClassGenerator",
-    date = "2025-05-18T10:02:55.844865600+02:00",
+    date = "2025-05-22T10:35:38.068992600+02:00",
     comments = "https://github.com/ehrbase/openEHR_SDK Version: 2.23.0-SNAPSHOT"
 )
-@Template("Presión Sanguínea")
-public class PresionSanguineaComposition implements CompositionEntity {
+@Template("blood_pressure")
+public class BloodPressureComposition implements CompositionEntity {
   /**
-   * Path: Presión Sanguínea/category
+   * Path: blood_pressure/category
    */
   @Path("/category|defining_code")
   private Category categoryDefiningCode;
 
   /**
-   * Path: Presión Sanguínea/context/Report ID
+   * Path: blood_pressure/context/Report ID
    * Description: Identification information about the report.
    */
   @Path("/context/other_context[at0001]/items[at0002]/value|value")
   private String reportIdValue;
 
   /**
-   * Path: Presión Sanguínea/context/Tree/Report ID/null_flavour
+   * Path: blood_pressure/context/Tree/Report ID/null_flavour
    */
   @Path("/context/other_context[at0001]/items[at0002]/null_flavour|defining_code")
   private NullFlavour reportIdNullFlavourDefiningCode;
 
   /**
-   * Path: Presión Sanguínea/context/Status
-   * Description: The status of the entire report. Note: This is not the status of any of the report components.
-   */
-  @Path("/context/other_context[at0001]/items[at0005]/value|value")
-  private String statusValue;
-
-  /**
-   * Path: Presión Sanguínea/context/Tree/Status/null_flavour
-   */
-  @Path("/context/other_context[at0001]/items[at0005]/null_flavour|defining_code")
-  private NullFlavour statusNullFlavourDefiningCode;
-
-  /**
-   * Path: Presión Sanguínea/context/Extension
+   * Path: blood_pressure/context/Extension
    * Description: Additional information required to capture local context or to align with other reference models/formalisms.
    * Comment: For example: local information requirements or additional metadata to align with FHIR or CIMI equivalents.
    */
@@ -72,43 +60,43 @@ public class PresionSanguineaComposition implements CompositionEntity {
   private List<Cluster> extension;
 
   /**
-   * Path: Presión Sanguínea/context/start_time
+   * Path: blood_pressure/context/start_time
    */
   @Path("/context/start_time|value")
   private TemporalAccessor startTimeValue;
 
   /**
-   * Path: Presión Sanguínea/context/participations
+   * Path: blood_pressure/context/participations
    */
   @Path("/context/participations")
   private List<Participation> participations;
 
   /**
-   * Path: Presión Sanguínea/context/end_time
+   * Path: blood_pressure/context/end_time
    */
   @Path("/context/end_time|value")
   private TemporalAccessor endTimeValue;
 
   /**
-   * Path: Presión Sanguínea/context/location
+   * Path: blood_pressure/context/location
    */
   @Path("/context/location")
   private String location;
 
   /**
-   * Path: Presión Sanguínea/context/health_care_facility
+   * Path: blood_pressure/context/health_care_facility
    */
   @Path("/context/health_care_facility")
   private PartyIdentified healthCareFacility;
 
   /**
-   * Path: Presión Sanguínea/context/setting
+   * Path: blood_pressure/context/setting
    */
   @Path("/context/setting|defining_code")
   private Setting settingDefiningCode;
 
   /**
-   * Path: Presión Sanguínea/Blood pressure
+   * Path: blood_pressure/Blood pressure
    * Description: The local measurement of arterial blood pressure which is a surrogate for arterial pressure in the systemic circulation.
    * Comment: Most commonly, use of the term 'blood pressure' refers to measurement of brachial artery pressure in the upper arm.
    */
@@ -116,25 +104,25 @@ public class PresionSanguineaComposition implements CompositionEntity {
   private BloodPressureObservation bloodPressure;
 
   /**
-   * Path: Presión Sanguínea/composer
+   * Path: blood_pressure/composer
    */
   @Path("/composer")
   private PartyProxy composer;
 
   /**
-   * Path: Presión Sanguínea/language
+   * Path: blood_pressure/language
    */
   @Path("/language")
   private Language language;
 
   /**
-   * Path: Presión Sanguínea/feeder_audit
+   * Path: blood_pressure/feeder_audit
    */
   @Path("/feeder_audit")
   private FeederAudit feederAudit;
 
   /**
-   * Path: Presión Sanguínea/territory
+   * Path: blood_pressure/territory
    */
   @Path("/territory")
   private Territory territory;
@@ -164,22 +152,6 @@ public class PresionSanguineaComposition implements CompositionEntity {
 
   public NullFlavour getReportIdNullFlavourDefiningCode() {
      return this.reportIdNullFlavourDefiningCode ;
-  }
-
-  public void setStatusValue(String statusValue) {
-     this.statusValue = statusValue;
-  }
-
-  public String getStatusValue() {
-     return this.statusValue ;
-  }
-
-  public void setStatusNullFlavourDefiningCode(NullFlavour statusNullFlavourDefiningCode) {
-     this.statusNullFlavourDefiningCode = statusNullFlavourDefiningCode;
-  }
-
-  public NullFlavour getStatusNullFlavourDefiningCode() {
-     return this.statusNullFlavourDefiningCode ;
   }
 
   public void setExtension(List<Cluster> extension) {
