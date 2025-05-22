@@ -1,4 +1,4 @@
-package com.myobservation.ehr.definition;
+package com.myobservation.ehr.pojos.definition;
 
 import javax.annotation.processing.Generated;
 import org.ehrbase.openehr.sdk.generator.commons.annotations.Entity;
@@ -9,13 +9,13 @@ import org.ehrbase.openehr.sdk.generator.commons.interfaces.RMEntity;
 @Entity
 @Generated(
     value = "org.ehrbase.openehr.sdk.generator.ClassGenerator",
-    date = "2025-05-18T10:02:55.942870200+02:00",
+    date = "2025-05-22T10:35:38.139018400+02:00",
     comments = "https://github.com/ehrbase/openEHR_SDK Version: 2.23.0-SNAPSHOT"
 )
 @OptionFor("DV_CODED_TEXT")
 public class BloodPressureLocationOfMeasurementDvCodedText implements RMEntity, BloodPressureLocationOfMeasurementChoice {
   /**
-   * Path: Presión Sanguínea/Blood pressure/Location of measurement/Location of measurement
+   * Path: blood_pressure/Blood pressure/Location of measurement/Location of measurement
    * Description: Simple body site where blood pressure was measured.
    */
   @Path("|defining_code")

@@ -67,7 +67,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Habilitar CORS
                 .authorizeHttpRequests(auth -> auth
-                        // Para pruebas desproteger estos paths
+                        // Para pruebas desproteger estos paths así no requieren autorización
                         .requestMatchers("/api/auth/**","/api/patients/**", "/h2-console/**", "/fhir/**","/api/fhir/validate", "/error", "/Patient","/api/v1/blood-pressure/**").permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "PRACTITIONER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")

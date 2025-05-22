@@ -1,4 +1,4 @@
-package com.myobservation.ehr.definition;
+package com.myobservation.ehr.pojos.definition;
 
 import java.lang.String;
 import org.ehrbase.openehr.sdk.generator.commons.interfaces.EnumValueSet;

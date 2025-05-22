@@ -3,9 +3,7 @@ package com.myobservation.ehr.model;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-/**
- * Data Transfer Object for blood pressure measurements.
- */
+
 public class BloodPressureRequestDTO implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -14,6 +12,7 @@ public class BloodPressureRequestDTO implements Serializable {
     // Measurement context
     private String location;
     private String composerName;
+    private LocalDateTime measurementTime;
 
     // Blood pressure values
     @NotNull(message = "Systolic value is required")
@@ -21,9 +20,6 @@ public class BloodPressureRequestDTO implements Serializable {
     @NotNull(message = "Diastolic value is required")
     private Double diastolic;
     private Double meanArterialPressure;
-    private Double pulseRate;
-    private String comment;
-    private LocalDateTime measurementTime;
 
     public String getPatientId() {
         return patientId;
@@ -72,27 +68,10 @@ public class BloodPressureRequestDTO implements Serializable {
     public void setMeanArterialPressure(Double meanArterialPressure) {
         this.meanArterialPressure = meanArterialPressure;
     }
-
-    public Double getPulseRate() {
-        return pulseRate;
-    }
-
-    public void setPulseRate(Double pulseRate) {
-        this.pulseRate = pulseRate;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
-    public void setComment(String comment) {
-        this.comment = comment;
-    }
-    public LocalDateTime getMeasurementTime() { // CAMBIA DE private A public
+    public LocalDateTime getMeasurementTime() {
         return measurementTime;
     }
-
-    public void setMeasurementTime(LocalDateTime measurementTime) { // Asegúrate que también es public
+    public void setMeasurementTime(LocalDateTime measurementTime) {
         this.measurementTime = measurementTime;
     }
 }
