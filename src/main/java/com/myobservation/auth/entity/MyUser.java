@@ -27,6 +27,7 @@ public class MyUser implements UserDetails {
 
     private Long userId;
 
+    // La Notación NotBlank es más a nivel código por ejemplo para DTOs en la entidad de la bbdd es mejor nullable
     @NotBlank(message = "First name cannot be blank")
     @Pattern(regexp = "^[A-Za-z]+$", message = "First name must contain only letters")
     private String firstName;
