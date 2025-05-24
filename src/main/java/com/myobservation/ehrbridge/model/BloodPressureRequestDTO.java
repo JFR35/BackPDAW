@@ -5,16 +5,14 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class BloodPressureRequestDTO implements Serializable {
-    private static final long serialVersionUID = 1L;
 
-    // Patient information
+    private static final long serialVersionUID = 1L;
     private String patientId;
-    // Measurement context
     private String location;
     private String composerName;
     private LocalDateTime measurementTime;
 
-    // Blood pressure values
+    // Valores del template
     @NotNull(message = "Systolic value is required")
     private Double systolic;
     @NotNull(message = "Diastolic value is required")
@@ -68,9 +66,11 @@ public class BloodPressureRequestDTO implements Serializable {
     public void setMeanArterialPressure(Double meanArterialPressure) {
         this.meanArterialPressure = meanArterialPressure;
     }
+
     public LocalDateTime getMeasurementTime() {
         return measurementTime;
     }
+
     public void setMeasurementTime(LocalDateTime measurementTime) {
         this.measurementTime = measurementTime;
     }

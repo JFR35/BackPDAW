@@ -112,6 +112,7 @@
 			<artifactId>mapstruct</artifactId>
 			<version>1.6.3</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.mapstruct</groupId>
 			<artifactId>mapstruct-processor</artifactId>
@@ -130,12 +131,14 @@
 			<version>0.12.6</version>
 			<scope>runtime</scope>
 		</dependency>
+
 		<dependency>
 			<groupId>io.jsonwebtoken</groupId>
 			<artifactId>jjwt-jackson</artifactId>
 			<version>0.12.6</version>
 			<scope>runtime</scope>
 		</dependency>
+
 		<!-- HAPI FHIR Dependencies -->
 		<dependency>
 			<groupId>ca.uhn.hapi.fhir</groupId>
@@ -159,6 +162,7 @@
 			<artifactId>hapi-fhir-validation</artifactId>
 			<version>8.0.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>ca.uhn.hapi.fhir</groupId>
 			<artifactId>hapi-fhir-caching-caffeine</artifactId>
@@ -170,16 +174,19 @@
 			<artifactId>jackson-databind</artifactId>
 			<version>2.18.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>client</artifactId>
 			<version>2.22.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>javax.validation</groupId>
 			<artifactId>validation-api</artifactId>
 			<version>2.0.1.Final</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-webflux</artifactId>
@@ -199,17 +206,18 @@
 			<scope>compile</scope>
 		</dependency>
 
-
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>response-dto</artifactId>
 			<version>2.22.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>web-template</artifactId>
 			<version>2.22.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.nedap.healthcare.archie</groupId>
 			<artifactId>openehr-rm</artifactId>
@@ -220,6 +228,7 @@
 			<artifactId>opt-1.4</artifactId>
 			<version>2.22.0</version>
 		</dependency>
+
 		<dependency>
 			<groupId>com.fasterxml.jackson.datatype</groupId>
 			<artifactId>jackson-datatype-jdk8</artifactId>
@@ -232,7 +241,6 @@
 			<version>2.22.0</version>
 		</dependency>
 
-		<!-- Serialización (JSON/XML) -->
 		<dependency>
 			<groupId>org.ehrbase.openehr.sdk</groupId>
 			<artifactId>serialisation</artifactId>

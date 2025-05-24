@@ -33,7 +33,9 @@ import java.util.*;
 public class EhrBaseService {
 
     private static final Logger logger = LoggerFactory.getLogger(EhrBaseService.class);
+
     private static final String TEMPLATE_ID = "blood_pressure";
+
     private final RestTemplate restTemplate;
     private final OpenEhrClient openEhrClient;
     private final TemplateProvider templateProvider;
@@ -77,7 +79,6 @@ public class EhrBaseService {
         }
     }
 
-
     public boolean verifyConnection() {
         try {
             openEhrClient.ehrEndpoint().getEhrStatus(UUID.randomUUID());
@@ -102,7 +103,7 @@ public class EhrBaseService {
         }
     }
 
-    private UUID createPatientEhr(String patientId) {
+    public UUID createPatientEhr(String patientId) {
         try {
             EhrEndpoint ehrEndpoint = openEhrClient.ehrEndpoint();
             UUID ehrId = ehrEndpoint.createEhr();
@@ -115,7 +116,6 @@ public class EhrBaseService {
 
     private BloodPressureComposition createBPComposition(BloodPressureRequestDTO requestDTO, UUID ehrId) {
         BloodPressureComposition composition = new BloodPressureComposition();
-
         composition.setLanguage(Language.EN);
         composition.setTerritory(Territory.ES);
         composition.setCategoryDefiningCode(Category.EVENT);

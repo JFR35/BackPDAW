@@ -4,16 +4,12 @@ import ca.uhn.fhir.validation.ValidationResult;
 import com.myobservation.fhirbridge.common.FHIRConstants;
 import com.myobservation.fhirbridge.service.FHIRBaseService;
 import com.myobservation.fhirbridge.service.FHIRValidationService;
-import com.myobservation.pmi.model.dto.PMIResponse;
-import com.myobservation.pmi.service.PatientMasterService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @RestController
@@ -24,12 +20,10 @@ public class FHIRBaseController {
 
     private final FHIRValidationService validationService;
     private final FHIRBaseService fhirBaseService;
-    private final PatientMasterService patientMasterService;
 
-    public FHIRBaseController(FHIRValidationService validationService, FHIRBaseService fhirBaseService, PatientMasterService patientMasterService) {
+    public FHIRBaseController(FHIRValidationService validationService, FHIRBaseService fhirBaseService) {
         this.validationService = validationService;
         this.fhirBaseService = fhirBaseService;
-        this.patientMasterService = patientMasterService;
     }
 
     /**
