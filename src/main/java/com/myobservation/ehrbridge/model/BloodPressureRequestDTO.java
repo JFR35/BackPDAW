@@ -1,26 +1,32 @@
 package com.myobservation.ehrbridge.model;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 public class BloodPressureRequestDTO implements Serializable {
+
     private static final long serialVersionUID = 1L;
-
-    // Patient information
+    @NotBlank(message = "Patient ID is required")
     private String patientId;
-    // Measurement context
+    @NotBlank(message = "Location is required")
     private String location;
+    @NotBlank(message = "Composer name is required")
     private String composerName;
+    @NotNull(message = "Measurement time is required")
     private LocalDateTime measurementTime;
-
-    // Blood pressure values
+    // Valores del template
     @NotNull(message = "Systolic value is required")
     private Double systolic;
     @NotNull(message = "Diastolic value is required")
     private Double diastolic;
+    @PositiveOrZero(message = "Mean arterial pressure must be positive or zero")
     private Double meanArterialPressure;
 
+    // Getters & Setters
     public String getPatientId() {
         return patientId;
     }
@@ -68,9 +74,11 @@ public class BloodPressureRequestDTO implements Serializable {
     public void setMeanArterialPressure(Double meanArterialPressure) {
         this.meanArterialPressure = meanArterialPressure;
     }
+
     public LocalDateTime getMeasurementTime() {
         return measurementTime;
     }
+
     public void setMeasurementTime(LocalDateTime measurementTime) {
         this.measurementTime = measurementTime;
     }

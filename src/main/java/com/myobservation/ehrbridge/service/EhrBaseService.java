@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myobservation.ehrbridge.pojos.BloodPressureComposition;
 import com.myobservation.ehrbridge.model.BloodPressureRequestDTO;
 import com.myobservation.ehrbridge.pojos.definition.*;
+import com.myobservation.empi.model.dto.BloodPressureMeasurementDto;
 import com.nedap.archie.rm.composition.Composition;
 import com.nedap.archie.rm.generic.PartyIdentified;
 import com.nedap.archie.rm.generic.PartySelf;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.io.File;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
@@ -37,6 +39,7 @@ public class EhrBaseService {
     private final RestTemplate restTemplate;
     private final OpenEhrClient openEhrClient;
     private final TemplateProvider templateProvider;
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Value("${ehrbase.url}")
     private String ehrBaseUrl;
@@ -63,13 +66,97 @@ public class EhrBaseService {
         registerTemplate();
     }
 
+    /**
+     * Consulta AQL para obtener el historial de mediciones de presión sanguínea.
+     * @param ehrId El ID del EHR del paciente.
+     * @return Lista de BloodPressureMeasurementDto con las mediciones.
+     */
+    public List<BloodPressureMeasurementDto> queryBloodPressureHistory(String ehrId) {
+        // Validar ehrId para prevenir inyecciones AQL
+        if (ehrId == null || !isValidUUID(ehrId)) {
+            throw new IllegalArgumentException("Invalid ehrId: " + ehrId);
+        }
+
+        // Construir la consulta AQL
+        String aqlQuery = "SELECT " +
+                "c/context/start_time as measurement_time, " +
+                "bp/data[at0001]/events[at0006]/data[at0003]/items[at0004]/value/magnitude as systolic_magnitude, " +
+                "bp/data[at0001]/events[at0006]/data[at0003]/items[at0004]/value/units as systolic_unit, " +
+                "bp/data[at0001]/events[at0006]/data[at0003]/items[at0005]/value/magnitude as diastolic_magnitude, " +
+                "bp/data[at0001]/events[at0006]/data[at0003]/items[at0005]/value/units as diastolic_unit, " +
+                "bp/protocol[at0011]/items[at0014]/value/value as location " +
+                "FROM EHR e " +
+                "CONTAINS COMPOSITION c " +
+                "CONTAINS OBSERVATION bp[openEHR-EHR-OBSERVATION.blood_pressure.v2] " +
+                "WHERE e/ehr_id/value = '" + ehrId + "' " +
+                "ORDER BY c/context/start_time DESC";
+
+        // Preparar la solicitud
+        HttpHeaders headers = createAuthenticatedHeaders();
+        headers.setAccept(List.of(MediaType.APPLICATION_JSON));
+
+        Map<String, String> requestBody = new LinkedHashMap<>();
+        requestBody.put("q", aqlQuery);
+
+        HttpEntity<Map<String, String>> request = new HttpEntity<>(requestBody, headers);
+        String queryUrl = ehrBaseUrl + "/rest/openehr/v1/query/aql";
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(queryUrl, request, Map.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                List<List<Object>> rows = (List<List<Object>>) response.getBody().get("rows");
+                List<BloodPressureMeasurementDto> measurements = new ArrayList<>();
+
+                if (rows != null) {
+                    for (List<Object> row : rows) {
+                        // Mapear los resultados de la consulta AQL al DTO
+                        LinkedHashMap<String, String> dateTimeMap = (LinkedHashMap<String, String>) row.get(0);
+                        OffsetDateTime measurementDate = OffsetDateTime.parse(dateTimeMap.get("value"));
+
+                        measurements.add(new BloodPressureMeasurementDto(
+                                measurementDate,
+                                (Double) row.get(1), // systolic_magnitude
+                                (String) row.get(2), // systolic_unit
+                                (Double) row.get(3), // diastolic_magnitude
+                                (String) row.get(4), // diastolic_unit
+                                (String) row.get(5), // location
+                                null // measuredBy se establecerá más adelante en PatientService
+                        ));
+                    }
+                }
+                logger.info("Successfully retrieved {} blood pressure measurements for ehrId: {}", measurements.size(), ehrId);
+                return measurements;
+            } else {
+                logger.error("Error querying EHRBase for ehrId {}: Status {}", ehrId, response.getStatusCode());
+                throw new RuntimeException("Error querying EHRBase: " + response.getStatusCode());
+            }
+        } catch (Exception e) {
+            logger.error("Failed to query blood pressure history for ehrId {}: {}", ehrId, e.getMessage());
+            throw new RuntimeException("Failed to query EHRBase: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Valida si una cadena es un UUID válido.
+     * @param uuid La cadena a validar.
+     * @return true si es un UUID válido, false en caso contrario.
+     */
+    private boolean isValidUUID(String uuid) {
+        try {
+            UUID.fromString(uuid);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
+        }
+    }
+    /*
     public void registerTemplate() {
         try {
             File templateFile = new File(templatePath + "/presion_sanguinea.opt");
             if (!templateFile.exists()) {
                 throw new RuntimeException("Template file not found: " + templateFile.getAbsolutePath());
             }
-            //openEhrClient.templateEndpoint().createTemplate(templateFile);
+            openEhrClient.templateEndpoint().createTemplate(templateFile);
             logger.info("Template 'presion_sanguinea' registered successfully.");
         } catch (Exception e) {
             logger.error("Failed to register template", e);
@@ -77,6 +164,21 @@ public class EhrBaseService {
         }
     }
 
+     */
+
+    public void registerTemplate() {
+        try {
+            File templateFile = new File(templatePath + "/presion_sanguinea.opt");
+            if (!templateFile.exists()) {
+                logger.warn("Template file 'presion_sanguinea.opt' not found: {}. The application will use the 'blood_pressure' template already registered in EHRBase.", templateFile.getAbsolutePath());
+            } else {
+                logger.info("Template file 'presion_sanguinea.opt' found, but 'blood_pressure' is being used from EHRBase.");
+            }
+        } catch (Exception e) {
+            logger.error("Failed to verify template file", e);
+            throw new RuntimeException("Failed to verify template file", e);
+        }
+    }
 
     public boolean verifyConnection() {
         try {
@@ -98,11 +200,12 @@ public class EhrBaseService {
             BloodPressureComposition composition = createBPComposition(requestDTO, ehrUUID);
             return saveComposition(composition, ehrUUID);
         } catch (Exception e) {
+            logger.error("Failed to create blood pressure composition for ehrId {}: {}", ehrId, e.getMessage(), e);
             throw new RuntimeException("Failed to create blood pressure composition", e);
         }
     }
 
-    private UUID createPatientEhr(String patientId) {
+    public UUID createPatientEhr(String patientId) {
         try {
             EhrEndpoint ehrEndpoint = openEhrClient.ehrEndpoint();
             UUID ehrId = ehrEndpoint.createEhr();
