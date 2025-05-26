@@ -63,8 +63,7 @@ public class PatientService {
         PatientMasterIndex pmiEntry = new PatientMasterIndex();
         pmiEntry.setNationalId(nationalId);
         pmiEntry.setFhirId(fhirId);
-        pmiEntry.setEhrId(ehrId);
-
+        pmiEntry.setEhrId(String.valueOf(ehrId));
         return pmiRepository.save(pmiEntry);
     }
 

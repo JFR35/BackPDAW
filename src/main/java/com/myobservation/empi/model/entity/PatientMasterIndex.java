@@ -18,7 +18,7 @@ public class PatientMasterIndex {
     private String fhirId;
 
     @Column(unique = true)
-    private UUID ehrId;
+    private String ehrId;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "practitioner_id")
@@ -62,11 +62,11 @@ public class PatientMasterIndex {
         this.fhirId = fhirId;
     }
 
-    public UUID getEhrId() {
+    public String getEhrId() {
         return ehrId;
     }
 
-    public void setEhrId(UUID ehrId) {
+    public void setEhrId(String ehrId) {
         this.ehrId = ehrId;
     }
 
