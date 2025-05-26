@@ -73,7 +73,7 @@ public class SecurityConfig {
                                 "/api/patients/**",
                                 "/api/practitioners/**",
                                 "/h2-console/**",
-                                "/fhir/**",
+                                "api/fhir/**",
                                 "/api/fhir/validate",
                                 "/error",
                                 "/Patient",

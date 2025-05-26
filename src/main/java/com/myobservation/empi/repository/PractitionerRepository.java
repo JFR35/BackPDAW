@@ -1,7 +1,7 @@
 
-package com.myobservation.pmi.repository;
+package com.myobservation.empi.repository;
 
-import com.myobservation.pmi.entity.PractitionerMasterIndex;
+import com.myobservation.empi.model.entity.PractitionerMasterIndex;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

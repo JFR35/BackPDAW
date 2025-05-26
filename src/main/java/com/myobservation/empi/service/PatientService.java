@@ -1,39 +1,42 @@
-package com.myobservation.pmi.service;
+package com.myobservation.empi.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myobservation.ehrbridge.model.BloodPressureRequestDTO;
 import com.myobservation.ehrbridge.service.EhrBaseService;
 import com.myobservation.fhirbridge.service.FHIRBaseService;
-import com.myobservation.pmi.entity.PatientMasterIndex;
-import com.myobservation.pmi.entity.PractitionerMasterIndex;
-import com.myobservation.pmi.repository.PatientMasterRepository;
-import com.myobservation.pmi.repository.PractitionerRepository;
+import com.myobservation.empi.model.entity.PatientMasterIndex;
+import com.myobservation.empi.model.entity.PractitionerMasterIndex;
+import com.myobservation.empi.model.entity.Visit;
+import com.myobservation.empi.model.dto.BloodPressureMeasurementDto;
+import com.myobservation.empi.repository.PatientMasterRepository;
+import com.myobservation.empi.repository.PractitionerRepository;
+import com.myobservation.empi.repository.VisitMasterRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
+import java.time.LocalDateTime;
+import java.util.*;
 
 @Service
-public class PatientService { // Cambiado el nombre de la clase
+public class PatientService {
 
     private final PatientMasterRepository pmiRepository;
-    private final PractitionerRepository practitionerRepository; // Sigue siendo necesaria para la asignación
+    private final PractitionerRepository practitionerRepository;
+    private final VisitMasterRepository visitMasterRepository;
     private final FHIRBaseService fhirBaseService;
     private final EhrBaseService ehrBaseService;
     private final ObjectMapper objectMapper;
 
     public PatientService(PatientMasterRepository pmiRepository,
-                          PractitionerRepository practitionerRepository, // Mantener la inyección
+                          PractitionerRepository practitionerRepository,
+                          VisitMasterRepository visitMasterRepository,
                           FHIRBaseService fhirBaseService,
                           EhrBaseService ehrBaseService,
                           ObjectMapper objectMapper) {
         this.pmiRepository = pmiRepository;
         this.practitionerRepository = practitionerRepository;
+        this.visitMasterRepository = visitMasterRepository;
         this.fhirBaseService = fhirBaseService;
         this.ehrBaseService = ehrBaseService;
         this.objectMapper = objectMapper;
@@ -65,13 +68,6 @@ public class PatientService { // Cambiado el nombre de la clase
         return pmiRepository.save(pmiEntry);
     }
 
-    /**
-     * Asigna un profesional de la salud existente a un paciente existente.
-     *
-     * @param patientNationalId      El DNI/NIE del paciente.
-     * @param practitionerNationalId El DNI/NIE del profesional de la salud.
-     * @return El PatientMasterIndex actualizado.
-     */
     @Transactional
     public PatientMasterIndex assignPractitionerToPatient(String patientNationalId, String practitionerNationalId) {
         PatientMasterIndex patientEntry = pmiRepository.findByNationalId(patientNationalId)
@@ -89,74 +85,71 @@ public class PatientService { // Cambiado el nombre de la clase
         PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
 
-        String practitionerFhirId = null;
-        if (pmiEntry.getAssignedPractitioner() != null) {
-            practitionerFhirId = pmiEntry.getAssignedPractitioner().getFhirId();
-            // Si tu BloodPressureRequestDTO necesita el practitionerFhirId,
-            // deberías setearlo en el DTO aquí antes de pasarlo a createBloodPressureComposition
-            // requestDTO.setPractitionerFhirId(practitionerFhirId);
-        } else {
-            System.out.println("Advertencia: No hay profesional de la salud asignado para la composición de presión sanguínea.");
-        }
+        PractitionerMasterIndex practitioner = pmiEntry.getAssignedPractitioner();
 
         String compositionId = ehrBaseService.createBloodPressureComposition(requestDTO, pmiEntry.getEhrId().toString());
+
+        Visit visit = new Visit();
+        visit.setVisitId(UUID.randomUUID().toString());
+        visit.setPatient(pmiEntry);
+        visit.setPractitioner(practitioner);
+        visit.setCompositionId(compositionId);
+        visit.setVisitDate(LocalDateTime.now());
+        visitMasterRepository.save(visit);
+
         return compositionId;
     }
 
-    /**
-     * Recupera los datos del paciente en formato JSON (como Strings).
-     *
-     * @param nationalId DNI/NIE del paciente.
-     * @return Un mapa que contiene las cadenas JSON del Patient de FHIR y del Practitioner.
-     */
+    @Transactional(readOnly = true)
+    public List<BloodPressureMeasurementDto> getBloodPressureHistory(String nationalId) {
+        PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
+                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
+
+        // Usar el nuevo método de EhrBaseService
+        List<BloodPressureMeasurementDto> measurements = ehrBaseService.queryBloodPressureHistory(pmiEntry.getEhrId().toString());
+
+        // Enriquecer con información del practitioner desde las visitas (si es necesario)
+        List<Visit> visits = visitMasterRepository.findByPatient(pmiEntry);
+        Map<String, String> compositionToPractitioner = new HashMap<>();
+        for (Visit visit : visits) {
+            if (visit.getCompositionId() != null && visit.getPractitioner() != null) {
+                compositionToPractitioner.put(visit.getCompositionId(), visit.getPractitioner().getName());
+            }
+        }
+
+        // Nota: No podemos correlacionar directamente las mediciones con las visitas porque la consulta AQL
+        // no devuelve el compositionId. Esto requeriría modificar la consulta AQL para incluir el compositionId.
+        // Por ahora, dejamos measuredBy como null.
+
+        return measurements;
+    }
+
     public Map<String, String> getPatientData(String nationalId) {
         PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
 
         Map<String, String> data = new HashMap<>();
 
-        // 1. Obtener FHIR Patient desde Aidbox
         String fhirPatientJson = fhirBaseService.getResourceById("Patient", pmiEntry.getFhirId())
                 .orElseThrow(() -> new RuntimeException("Recurso Patient no encontrado en Aidbox con ID: " + pmiEntry.getFhirId()));
         data.put("fhirPatient", fhirPatientJson);
 
-        // 2. Obtener Practitioner (si existe y está asignado en PMI)
         if (pmiEntry.getAssignedPractitioner() != null) {
             Optional<String> practitionerJson = fhirBaseService.getResourceById("Practitioner", pmiEntry.getAssignedPractitioner().getFhirId());
             practitionerJson.ifPresent(s -> data.put("practitioner", s));
         }
 
-        // 3. Puedes añadir aquí la lógica para obtener las composiciones de EHRbase si lo deseas.
-        // Por ejemplo:
-        // List<String> ehrCompositions = ehrBaseService.getCompositionsByEhrId(pmiEntry.getEhrId());
-        // data.put("ehrCompositions", objectMapper.writeValueAsString(ehrCompositions)); // Convertir lista a JSON String
-
         return data;
     }
 
-    // --- MÉTODOS CRUD PARA PATIENT ---
-
-    /**
-     * Obtiene un paciente por su DNI/NIE.
-     */
     public Optional<PatientMasterIndex> getPatientByNationalId(String nationalId) {
         return pmiRepository.findByNationalId(nationalId);
     }
 
-    /**
-     * Obtiene todos los pacientes registrados en el PMI.
-     */
     public List<PatientMasterIndex> getAllPatients() {
         return pmiRepository.findAll();
     }
 
-    /**
-     * Actualiza un paciente existente.
-     * Permite actualizar el FHIR ID o el EHR ID, y reasignar el Practitioner.
-     * @param nationalId DNI/NIE del paciente a actualizar.
-     * @param updatedPatient Datos del paciente con los campos a actualizar.
-     * @return El PatientMasterIndex actualizado.
-     */
     @Transactional
     public PatientMasterIndex updatePatient(String nationalId, PatientMasterIndex updatedPatient) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
@@ -168,32 +161,21 @@ public class PatientService { // Cambiado el nombre de la clase
         if (updatedPatient.getEhrId() != null) {
             existingPatient.setEhrId(updatedPatient.getEhrId());
         }
-        // Asignar nuevo practitioner si se proporciona en updatedPatient y es diferente
         if (updatedPatient.getAssignedPractitioner() != null) {
             PractitionerMasterIndex newAssignedPractitioner = practitionerRepository.findByNationalId(updatedPatient.getAssignedPractitioner().getNationalId())
                     .orElseThrow(() -> new RuntimeException("Practitioner asignado no encontrado"));
             existingPatient.setAssignedPractitioner(newAssignedPractitioner);
-        } else {
-            // Si assignedPractitioner es null en updatedPatient y era null antes, no hacemos nada.
-            // Si era asignado y ahora es null, desasignamos.
-            if (existingPatient.getAssignedPractitioner() != null) {
-                existingPatient.setAssignedPractitioner(null);
-            }
+        } else if (existingPatient.getAssignedPractitioner() != null) {
+            existingPatient.setAssignedPractitioner(null);
         }
-
 
         return pmiRepository.save(existingPatient);
     }
 
-    /**
-     * Elimina un paciente por su DNI/NIE.
-     * Nota: Esto solo elimina la entrada del PMI. No elimina el Patient de Aidbox ni el EHR de EHRbase automáticamente.
-     */
     @Transactional
     public void deletePatient(String nationalId) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado para eliminar."));
-
         pmiRepository.delete(existingPatient);
     }
 }

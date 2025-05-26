@@ -1,12 +1,12 @@
-package com.myobservation.pmi.service;
+package com.myobservation.empi.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.myobservation.fhirbridge.service.FHIRBaseService;
-import com.myobservation.pmi.entity.PatientMasterIndex;
-import com.myobservation.pmi.entity.PractitionerMasterIndex;
-import com.myobservation.pmi.repository.PatientMasterRepository; // Necesario para la desasignación
-import com.myobservation.pmi.repository.PractitionerRepository;
+import com.myobservation.empi.model.entity.PatientMasterIndex;
+import com.myobservation.empi.model.entity.PractitionerMasterIndex;
+import com.myobservation.empi.repository.PatientMasterRepository; // Necesario para la desasignación
+import com.myobservation.empi.repository.PractitionerRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +31,14 @@ public class PractitionerService { // Cambiado el nombre de la clase
         this.objectMapper = objectMapper;
     }
 
+
+
+    /**
+     * Obtiene un profesional de la salud por su DNI/NIE (ID local).
+     */
+    public Optional<PractitionerMasterIndex> getPractitionerByNationalId(String nationalId) {
+        return practitionerRepository.findByNationalId(nationalId);
+    }
     @Transactional
     public PractitionerMasterIndex registerNewPractitioner(String practitionerJson, String nationalId) {
         Optional<PractitionerMasterIndex> existingPractitioner = practitionerRepository.findByNationalId(nationalId);
@@ -53,6 +61,8 @@ public class PractitionerService { // Cambiado el nombre de la clase
 
         try {
             JsonNode rootNode = objectMapper.readTree(practitionerJson);
+
+            // Extraer Nombre (tu código existente)
             JsonNode nameNode = rootNode.path("name").get(0);
             if (nameNode != null) {
                 if (nameNode.has("given") && nameNode.path("given").isArray()) {
@@ -61,20 +71,30 @@ public class PractitionerService { // Cambiado el nombre de la clase
                     practitionerEntry.setName(nameNode.path("family").asText());
                 }
             }
+
+            // --- ¡AÑADIR ESTO PARA LA ESPECIALIDAD! ---
+            JsonNode qualificationNode = rootNode.path("qualification");
+            if (qualificationNode.isArray() && qualificationNode.size() > 0) {
+                JsonNode firstQualification = qualificationNode.get(0);
+                JsonNode codeNode = firstQualification.path("code");
+                if (codeNode.has("coding") && codeNode.path("coding").isArray() && codeNode.path("coding").size() > 0) {
+                    JsonNode codingNode = codeNode.path("coding").get(0);
+                    if (codingNode.has("display")) { // Preferir 'display' si existe
+                        practitionerEntry.setSpecialty(codingNode.path("display").asText());
+                    } else if (codingNode.has("code")) { // Si no hay 'display', usar 'code'
+                        practitionerEntry.setSpecialty(codingNode.path("code").asText());
+                    }
+                }
+            }
+            // --- FIN AÑADIR ESPECIALIDAD ---
+
         } catch (Exception e) {
-            System.err.println("Advertencia: No se pudo parsear el nombre del Practitioner del JSON: " + e.getMessage());
+            System.err.println("Advertencia: No se pudo parsear el nombre o la especialidad del Practitioner del JSON: " + e.getMessage());
+            // Considera si este error debe impedir el guardado. Para tu caso, quizás no.
         }
 
         return practitionerRepository.save(practitionerEntry);
     }
-
-    /**
-     * Obtiene un profesional de la salud por su DNI/NIE (ID local).
-     */
-    public Optional<PractitionerMasterIndex> getPractitionerByNationalId(String nationalId) {
-        return practitionerRepository.findByNationalId(nationalId);
-    }
-
     /**
      * Obtiene todos los profesionales de la salud registrados en el PMI.
      */

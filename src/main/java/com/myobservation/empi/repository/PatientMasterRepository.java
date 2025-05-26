@@ -1,7 +1,7 @@
-package com.myobservation.pmi.repository;
+package com.myobservation.empi.repository;
 
-import com.myobservation.pmi.entity.PatientMasterIndex;
-import com.myobservation.pmi.entity.PractitionerMasterIndex; // Asegúrate de importar esto
+import com.myobservation.empi.model.entity.PatientMasterIndex;
+import com.myobservation.empi.model.entity.PractitionerMasterIndex; // Asegúrate de importar esto
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -22,5 +22,5 @@ public interface PatientMasterRepository extends JpaRepository<PatientMasterInde
 
     // Otros métodos de búsqueda si los tienes...
     // Optional<PatientMasterIndex> findByFhirId(String fhirId);
-    // Optional<PatientMasterIndex> findByEhrId(UUID ehrId);
+    Optional<PatientMasterIndex> findByEhrId(UUID ehrId);
 }

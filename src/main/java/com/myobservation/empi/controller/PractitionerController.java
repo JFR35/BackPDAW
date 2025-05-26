@@ -1,7 +1,7 @@
-package com.myobservation.pmi.controller;
+package com.myobservation.empi.controller;
 
-import com.myobservation.pmi.service.PractitionerService; // Cambiado a PractitionerService
-import com.myobservation.pmi.entity.PractitionerMasterIndex;
+import com.myobservation.empi.service.PractitionerService; // Cambiado a PractitionerService
+import com.myobservation.empi.model.entity.PractitionerMasterIndex;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -28,7 +28,7 @@ public class PractitionerController {
             @RequestBody String fhirPractitionerJson,
             @RequestParam String nationalId) {
         try {
-            PractitionerMasterIndex practitioner = practitionerService.registerNewPractitioner(fhirPractitionerJson, nationalId); // Usa practitionerService
+            PractitionerMasterIndex practitioner = practitionerService.registerNewPractitioner(fhirPractitionerJson, nationalId);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Profesional de la salud registrado exitosamente.");
             response.put("localId", practitioner.getNationalId());

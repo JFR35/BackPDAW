@@ -1,8 +1,9 @@
-package com.myobservation.pmi.controller;
+package com.myobservation.empi.controller;
 
 import com.myobservation.ehrbridge.model.BloodPressureRequestDTO;
-import com.myobservation.pmi.service.PatientService; // Cambiado a PatientService
-import com.myobservation.pmi.entity.PatientMasterIndex;
+import com.myobservation.empi.model.dto.BloodPressureMeasurementDto;
+import com.myobservation.empi.service.PatientService;
+import com.myobservation.empi.model.entity.PatientMasterIndex;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,20 +18,18 @@ import java.util.Optional;
 @RequestMapping("/api/patients")
 public class PatientController {
 
-    private final PatientService patientService; // Inyecta PatientService
+    private final PatientService patientService;
 
-    public PatientController(PatientService patientService) { // Constructor actualizado
+    public PatientController(PatientService patientService) {
         this.patientService = patientService;
     }
-
-    // ... (Todos los métodos POST, GET, PUT, DELETE para pacientes y sus operaciones) ...
 
     @PostMapping
     public ResponseEntity<Map<String, String>> registerPatient(
             @RequestBody String fhirPatientJson,
             @RequestParam String nationalId) {
         try {
-            PatientMasterIndex pmi = patientService.registerNewPatient(fhirPatientJson, nationalId); // Usa patientService
+            PatientMasterIndex pmi = patientService.registerNewPatient(fhirPatientJson, nationalId);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Paciente registrado exitosamente.");
             response.put("patientId (national)", pmi.getNationalId());
@@ -46,7 +45,7 @@ public class PatientController {
     @GetMapping("/{nationalId}")
     public ResponseEntity<Map<String, String>> getPatientCombinedData(@PathVariable String nationalId) {
         try {
-            Map<String, String> data = patientService.getPatientData(nationalId); // Usa patientService
+            Map<String, String> data = patientService.getPatientData(nationalId);
             return ResponseEntity.ok(data);
         } catch (Exception e) {
             HttpStatus status = (e.getMessage() != null && e.getMessage().contains("no encontrado")) ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
@@ -57,14 +56,14 @@ public class PatientController {
 
     @GetMapping("/{nationalId}/pmi")
     public ResponseEntity<PatientMasterIndex> getPatientPmiByNationalId(@PathVariable String nationalId) {
-        Optional<PatientMasterIndex> pmi = patientService.getPatientByNationalId(nationalId); // Usa patientService
+        Optional<PatientMasterIndex> pmi = patientService.getPatientByNationalId(nationalId);
         return pmi.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @GetMapping
     public ResponseEntity<List<PatientMasterIndex>> getAllPatientsPmi() {
-        List<PatientMasterIndex> patients = patientService.getAllPatients(); // Usa patientService
+        List<PatientMasterIndex> patients = patientService.getAllPatients();
         return ResponseEntity.ok(patients);
     }
 
@@ -73,7 +72,7 @@ public class PatientController {
             @PathVariable String nationalId,
             @RequestBody PatientMasterIndex updatedPatient) {
         try {
-            PatientMasterIndex patient = patientService.updatePatient(nationalId, updatedPatient); // Usa patientService
+            PatientMasterIndex patient = patientService.updatePatient(nationalId, updatedPatient);
             return ResponseEntity.ok(patient);
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -85,7 +84,7 @@ public class PatientController {
     @DeleteMapping("/{nationalId}")
     public ResponseEntity<Void> deletePatient(@PathVariable String nationalId) {
         try {
-            patientService.deletePatient(nationalId); // Usa patientService
+            patientService.deletePatient(nationalId);
             return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
@@ -99,7 +98,7 @@ public class PatientController {
             @PathVariable String nationalId,
             @Valid @RequestBody BloodPressureRequestDTO requestDTO) {
         try {
-            String compositionId = patientService.createBloodPressureRecord(nationalId, requestDTO); // Usa patientService
+            String compositionId = patientService.createBloodPressureRecord(nationalId, requestDTO);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Medición de presión sanguínea guardada exitosamente.");
             response.put("compositionId", compositionId);
@@ -115,7 +114,7 @@ public class PatientController {
             @PathVariable String patientNationalId,
             @PathVariable String practitionerNationalId) {
         try {
-            PatientMasterIndex pmi = patientService.assignPractitionerToPatient(patientNationalId, practitionerNationalId); // Usa patientService
+            PatientMasterIndex pmi = patientService.assignPractitionerToPatient(patientNationalId, practitionerNationalId);
             Map<String, String> response = new HashMap<>();
             response.put("message", "Profesional de la salud asignado exitosamente al paciente.");
             response.put("patientNationalId", pmi.getNationalId());
@@ -131,6 +130,17 @@ public class PatientController {
             HttpStatus status = (e.getMessage() != null && e.getMessage().contains("no encontrado")) ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
             return ResponseEntity.status(status)
                     .body(Map.of("error", "Error al asignar profesional de la salud: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/{nationalId}/blood-pressure-history")
+    public ResponseEntity<List<BloodPressureMeasurementDto>> getBloodPressureHistory(@PathVariable String nationalId) {
+        try {
+            List<BloodPressureMeasurementDto> history = patientService.getBloodPressureHistory(nationalId);
+            return ResponseEntity.ok(history);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(null);
         }
     }
 }
