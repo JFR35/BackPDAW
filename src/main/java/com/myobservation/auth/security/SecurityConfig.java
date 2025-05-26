@@ -77,7 +77,10 @@ public class SecurityConfig {
                                 "/api/fhir/validate",
                                 "/error",
                                 "/Patient",
-                                "/api/v1/blood-pressure/**").permitAll()
+                                "/api/v1/blood-pressure/**",
+                                "/api/observations/**",
+                                "/api/visits/**")
+                        .permitAll()
                         .requestMatchers("/api/users/**").hasAnyRole("ADMIN", "PRACTITIONER")
                         .requestMatchers("/admin/**").hasRole("ADMIN")
                         .requestMatchers("/practitioner/**", "/api/fhir/patients/**", "/api/fhirbase/**").hasRole("PRACTITIONER")

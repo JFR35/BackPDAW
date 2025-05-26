@@ -22,5 +22,5 @@ public interface PatientMasterRepository extends JpaRepository<PatientMasterInde
 
     // Otros métodos de búsqueda si los tienes...
     // Optional<PatientMasterIndex> findByFhirId(String fhirId);
-    Optional<PatientMasterIndex> findByEhrId(UUID ehrId);
+    Optional<PatientMasterIndex> findByEhrId(String ehrId);
 }
