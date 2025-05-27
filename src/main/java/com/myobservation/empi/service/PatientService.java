@@ -1,3 +1,4 @@
+// src/main/java/com/myobservation/empi/service/PatientService.java
 package com.myobservation.empi.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -9,6 +10,7 @@ import com.myobservation.empi.model.entity.PatientMasterIndex;
 import com.myobservation.empi.model.entity.PractitionerMasterIndex;
 import com.myobservation.empi.model.entity.Visit;
 import com.myobservation.empi.model.dto.BloodPressureMeasurementDto;
+import com.myobservation.empi.model.dto.PatientResponseDTO; // <--- Importa el DTO
 import com.myobservation.empi.repository.PatientMasterRepository;
 import com.myobservation.empi.repository.PractitionerRepository;
 import com.myobservation.empi.repository.VisitMasterRepository;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class PatientService {
@@ -43,7 +46,7 @@ public class PatientService {
     }
 
     @Transactional
-    public PatientMasterIndex registerNewPatient(String patientJson, String nationalId) {
+    public PatientResponseDTO registerNewPatient(String patientJson, String nationalId) {
         Optional<PatientMasterIndex> existingPmi = pmiRepository.findByNationalId(nationalId);
         if (existingPmi.isPresent()) {
             throw new RuntimeException("Paciente con DNI/NIE " + nationalId + " ya existe.");
@@ -64,117 +67,75 @@ public class PatientService {
         pmiEntry.setNationalId(nationalId);
         pmiEntry.setFhirId(fhirId);
         pmiEntry.setEhrId(String.valueOf(ehrId));
-        return pmiRepository.save(pmiEntry);
-    }
+        // Aquí no se guarda el fhirPatientJson en el PMI porque ya lo tienes en Aidbox
 
-    @Transactional
-    public PatientMasterIndex assignPractitionerToPatient(String patientNationalId, String practitionerNationalId) {
-        PatientMasterIndex patientEntry = pmiRepository.findByNationalId(patientNationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + patientNationalId + " no encontrado."));
+        PatientMasterIndex savedPmi = pmiRepository.save(pmiEntry);
 
-        PractitionerMasterIndex practitionerEntry = practitionerRepository.findByNationalId(practitionerNationalId)
-                .orElseThrow(() -> new RuntimeException("Profesional de la salud con ID " + practitionerNationalId + " no encontrado."));
-
-        patientEntry.setAssignedPractitioner(practitionerEntry);
-        return pmiRepository.save(patientEntry);
-    }
-
-    @Transactional
-    public String createBloodPressureRecord(String nationalId, BloodPressureRequestDTO requestDTO) {
-        PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
-
-        PractitionerMasterIndex practitioner = pmiEntry.getAssignedPractitioner();
-
-        String compositionId = ehrBaseService.createBloodPressureComposition(requestDTO, pmiEntry.getEhrId().toString());
-
-        Visit visit = new Visit();
-        visit.setVisitId(UUID.randomUUID().toString());
-        visit.setPatient(pmiEntry);
-        visit.setPractitioner(practitioner);
-        visit.setCompositionId(compositionId);
-        visit.setVisitDate(LocalDateTime.now());
-        visitMasterRepository.save(visit);
-
-        return compositionId;
+        // Retorna el DTO con la información del PMI y el JSON de FHIR
+        return new PatientResponseDTO(savedPmi, fhirResponseJson);
     }
 
     @Transactional(readOnly = true)
-    public List<BloodPressureMeasurementDto> getBloodPressureHistory(String nationalId) {
+    public PatientResponseDTO getPatientByNationalIdWithFhirData(String nationalId) {
         PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
-
-        // Usar el nuevo método de EhrBaseService
-        List<BloodPressureMeasurementDto> measurements = ehrBaseService.queryBloodPressureHistory(pmiEntry.getEhrId().toString());
-
-        // Enriquecer con información del practitioner desde las visitas (si es necesario)
-        List<Visit> visits = visitMasterRepository.findByPatient(pmiEntry);
-        Map<String, String> compositionToPractitioner = new HashMap<>();
-        for (Visit visit : visits) {
-            if (visit.getCompositionId() != null && visit.getPractitioner() != null) {
-                compositionToPractitioner.put(visit.getCompositionId(), visit.getPractitioner().getName());
-            }
-        }
-
-        // Nota: No podemos correlacionar directamente las mediciones con las visitas porque la consulta AQL
-        // no devuelve el compositionId. Esto requeriría modificar la consulta AQL para incluir el compositionId.
-        // Por ahora, dejamos measuredBy como null.
-
-        return measurements;
-    }
-
-    public Map<String, String> getPatientData(String nationalId) {
-        PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
-
-        Map<String, String> data = new HashMap<>();
 
         String fhirPatientJson = fhirBaseService.getResourceById("Patient", pmiEntry.getFhirId())
                 .orElseThrow(() -> new RuntimeException("Recurso Patient no encontrado en Aidbox con ID: " + pmiEntry.getFhirId()));
-        data.put("fhirPatient", fhirPatientJson);
 
-        if (pmiEntry.getAssignedPractitioner() != null) {
-            Optional<String> practitionerJson = fhirBaseService.getResourceById("Practitioner", pmiEntry.getAssignedPractitioner().getFhirId());
-            practitionerJson.ifPresent(s -> data.put("practitioner", s));
-        }
-
-        return data;
+        return new PatientResponseDTO(pmiEntry, fhirPatientJson);
     }
 
-    public Optional<PatientMasterIndex> getPatientByNationalId(String nationalId) {
-        return pmiRepository.findByNationalId(nationalId);
+    @Transactional(readOnly = true)
+    public List<PatientResponseDTO> getAllPatientsWithFhirData() {
+        List<PatientMasterIndex> allPmis = pmiRepository.findAll();
+
+        return allPmis.stream().map(pmi -> {
+            String fhirPatientJson;
+            try {
+                // Intenta obtener el recurso FHIR del Aidbox
+                fhirPatientJson = fhirBaseService.getResourceById("Patient", pmi.getFhirId())
+                        .orElse("{\"resourceType\":\"Patient\",\"id\":\"" + pmi.getFhirId() + "\",\"identifier\":[{\"system\":\"error\",\"value\":\"" + pmi.getNationalId() + "\"}],\"name\":[{\"family\":\"Error\",\"given\":[\"Missing FHIR Data\"]}],\"gender\":\"unknown\",\"birthDate\":\"1900-01-01\"}"); // Fallback JSON si no se encuentra
+            } catch (Exception e) {
+                // Maneja errores si la llamada a Aidbox falla para un paciente específico
+                System.err.println("Error fetching FHIR data for patient " + pmi.getNationalId() + " (FHIR ID: " + pmi.getFhirId() + "): " + e.getMessage());
+                fhirPatientJson = "{\"resourceType\":\"Patient\",\"id\":\"" + pmi.getFhirId() + "\",\"identifier\":[{\"system\":\"error\",\"value\":\"" + pmi.getNationalId() + "\"}],\"name\":[{\"family\":\"Error\",\"given\":[\"Loading Data Error\"]}],\"gender\":\"unknown\",\"birthDate\":\"1900-01-01\"}";
+            }
+            return new PatientResponseDTO(pmi, fhirPatientJson);
+        }).collect(Collectors.toList());
     }
 
-    public List<PatientMasterIndex> getAllPatients() {
-        return pmiRepository.findAll();
-    }
-
+    /*
     @Transactional
-    public PatientMasterIndex updatePatient(String nationalId, PatientMasterIndex updatedPatient) {
+    public PatientResponseDTO updatePatient(String nationalId, String updatedFhirPatientJson) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado para actualizar."));
 
-        if (updatedPatient.getFhirId() != null && !updatedPatient.getFhirId().isEmpty()) {
-            existingPatient.setFhirId(updatedPatient.getFhirId());
-        }
-        if (updatedPatient.getEhrId() != null) {
-            existingPatient.setEhrId(updatedPatient.getEhrId());
-        }
-        if (updatedPatient.getAssignedPractitioner() != null) {
-            PractitionerMasterIndex newAssignedPractitioner = practitionerRepository.findByNationalId(updatedPatient.getAssignedPractitioner().getNationalId())
-                    .orElseThrow(() -> new RuntimeException("Practitioner asignado no encontrado"));
-            existingPatient.setAssignedPractitioner(newAssignedPractitioner);
-        } else if (existingPatient.getAssignedPractitioner() != null) {
-            existingPatient.setAssignedPractitioner(null);
-        }
+        // Actualizar el recurso FHIR en Aidbox
+        String updatedFhirResponseJson = fhirBaseService.updateResource("Patient", existingPatient.getFhirId(), updatedFhirPatientJson);
 
-        return pmiRepository.save(existingPatient);
+        // Opcional: Si el FHIR ID o el DNI/NIE pudiera cambiar en la actualización de FHIR, lo actualizarías aquí
+        // Por ahora, asumimos que nationalId y fhirId son estables.
+
+        // Retornar el DTO actualizado
+        return new PatientResponseDTO(existingPatient, updatedFhirResponseJson);
     }
+     */
 
     @Transactional
     public void deletePatient(String nationalId) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado para eliminar."));
+
+        // Opcional: Eliminar el recurso FHIR de Aidbox y el EHR de EHRbase
+        // fhirBaseService.deleteResource("Patient", existingPatient.getFhirId());
+        // ehrBaseService.deleteEhr(existingPatient.getEhrId());
+
         pmiRepository.delete(existingPatient);
     }
+
+    // ... (Mantén el resto de tus métodos como assignPractitionerToPatient, createBloodPressureRecord, getBloodPressureHistory)
+    // Asegúrate de que los métodos que devuelven PMI directo o Map no se usen para el frontend directamente
+    // Si tienes un método getPatientData (Map), considera deprecatearlo o renombrarlo para evitar confusiones.
+    // getPatientByNationalId (Optional<PatientMasterIndex>) también es solo para uso interno si ya tienes getPatientByNationalIdWithFhirData
 }
