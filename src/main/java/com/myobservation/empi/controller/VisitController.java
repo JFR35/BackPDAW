@@ -1,14 +1,14 @@
+// src/main/java/com/myobservation/empi/controller/VisitController.java
 package com.myobservation.empi.controller;
 
-import com.myobservation.ehrbridge.service.EhrBaseService;
-import com.myobservation.empi.model.entity.Visit;
+import com.myobservation.empi.model.dto.VisitRequestDTO;
+import com.myobservation.empi.model.dto.VisitResponseDTO;
 import com.myobservation.empi.service.VisitService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,123 +17,52 @@ import java.util.Map;
 public class VisitController {
 
     private final VisitService visitService;
-    private final EhrBaseService ehrBaseService;
 
-    public VisitController(VisitService visitService, EhrBaseService ehrBaseService) {
+    public VisitController(VisitService visitService) {
         this.visitService = visitService;
-        this.ehrBaseService = ehrBaseService;
     }
 
-    static class CreateVisitRequest {
-        public Long patientId;
-        public Long practitionerId;
-        public LocalDateTime visitDate;
-    }
-
-    @PostMapping
-    public ResponseEntity<?> createVisit(@RequestBody CreateVisitRequest request) {
+    @PostMapping // POST /api/visits
+    public ResponseEntity<VisitResponseDTO> createVisitWithBloodPressure(@Valid @RequestBody VisitRequestDTO requestDTO) {
         try {
-            Visit newVisit = visitService.createVisit(request.patientId, request.practitionerId, request.visitDate);
-            return new ResponseEntity<>(newVisit, HttpStatus.CREATED);
+            VisitResponseDTO responseDTO = visitService.createVisitWithBloodPressure(requestDTO);
+            return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(new ErrorResponse("Error creating visit", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND) // 404 para paciente/profesional no encontrado
+                    .body(null); // O un DTO de error más detallado
         } catch (Exception e) {
+            // Log the exception
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Internal server error", e.getMessage()));
+                    .body(null);
         }
     }
 
-    @PutMapping("/{visitLocalId}/composition")
-    public ResponseEntity<?> updateVisitCompositionId(@PathVariable Long visitLocalId,
-                                                      @RequestBody Map<String, String> body) {
+    @GetMapping("/{visitUuid}") // GET /api/visits/{visitUuid}
+    public ResponseEntity<VisitResponseDTO> getVisitByUuid(@PathVariable String visitUuid) {
         try {
-            String compositionId = body.get("compositionId");
-            if (compositionId == null || compositionId.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(new ErrorResponse("Invalid input", "Composition ID is required"));
-            }
-            Visit updatedVisit = visitService.updateVisitWithCompositionId(visitLocalId, compositionId);
-            return ResponseEntity.ok(updatedVisit);
+            VisitResponseDTO visit = visitService.getVisitByUuid(visitUuid);
+            return ResponseEntity.ok(visit);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Error updating visit", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Internal server error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @GetMapping("/{visitLocalId}")
-    public ResponseEntity<Visit> getVisitById(@PathVariable Long visitLocalId) {
-        return visitService.getVisitById(visitLocalId)
-                .map(ResponseEntity::ok)
-                .orElseGet(() -> ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/patient/{patientId}")
-    public ResponseEntity<?> getVisitsByPatient(@PathVariable Long patientId) {
+    @GetMapping("/patient/{patientNationalId}") // GET /api/visits/patient/{patientNationalId}
+    public ResponseEntity<List<VisitResponseDTO>> getVisitsByPatientNationalId(@PathVariable String patientNationalId) {
         try {
-            List<Visit> visits = visitService.getVisitsByPatient(patientId);
+            List<VisitResponseDTO> visits = visitService.getVisitsByPatientNationalId(patientNationalId);
             return ResponseEntity.ok(visits);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Error retrieving visits", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Internal server error", e.getMessage()));
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @DeleteMapping("/{visitLocalId}")
-    public ResponseEntity<Void> deleteVisit(@PathVariable Long visitLocalId) {
-        try {
-            visitService.deleteVisit(visitLocalId);
-            return ResponseEntity.noContent().build();
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @GetMapping("/{visitLocalId}/details")
-    public ResponseEntity<?> getVisitWithMeasurement(@PathVariable Long visitLocalId) {
-        try {
-            Visit visit = visitService.getVisitById(visitLocalId)
-                    .orElseThrow(() -> new IllegalArgumentException("Visita no encontrada con ID: " + visitLocalId));
-            Map<String, Object> response = new HashMap<>();
-            response.put("visit", visit);
-            if (visit.getCompositionId() != null) {
-                if (visit.getPatient().getEhrId() == null) {
-                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                            .body(new ErrorResponse("Invalid state", "No EHR ID associated with patient"));
-                }
-                String compositionJson = ehrBaseService.getComposition(visit.getPatient().getEhrId(), visit.getCompositionId());
-                response.put("measurement", compositionJson);
-            }
-            return ResponseEntity.ok(response);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(new ErrorResponse("Error retrieving visit", e.getMessage()));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(new ErrorResponse("Internal server error", e.getMessage()));
-        }
-    }
-
-    public static class ErrorResponse {
-        private String message;
-        private String details;
-
-        public ErrorResponse(String message, String details) {
-            this.message = message;
-            this.details = details;
-        }
-
-        public String getMessage() { return message; }
-        public void setMessage(String message) { this.message = message; }
-        public String getDetails() { return details; }
-        public void setDetails(String details) { this.details = details; }
-    }
+    // Aquí podrías añadir endpoints para:
+    // - Actualizar una visita (quizás su fecha o el profesional asignado)
+    // - Eliminar una visita (considerando la eliminación de la composición en EHRbase)
+    // - Obtener solo mediciones de BP si no quieres obtener toda la visita
 }

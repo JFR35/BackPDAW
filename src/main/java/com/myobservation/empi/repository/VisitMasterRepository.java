@@ -1,3 +1,4 @@
+// src/main/java/com/myobservation/empi/repository/VisitMasterRepository.java
 package com.myobservation.empi.repository;
 
 import com.myobservation.empi.model.entity.PatientMasterIndex;
@@ -11,5 +12,5 @@ import java.util.Optional;
 @Repository
 public interface VisitMasterRepository extends JpaRepository<Visit, Long> {
     List<Visit> findByPatient(PatientMasterIndex patient);
-    Optional<Visit> findByVisitId(String visitId);
+    Optional<Visit> findByVisitUuid(String visitUuid); // <-- ¡CAMBIO AQUÍ!
 }
