@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Optional;
 
+/**
+ * Este controlador comunica con Aidbox
+ */
 @RestController
 @RequestMapping("/fhir")
 public class FHIRBaseController {
@@ -34,7 +37,7 @@ public class FHIRBaseController {
      */
     @PostMapping("/Patient")
     public ResponseEntity<?> storePatient(@RequestBody String jsonPatient) {
-        logger.info("Recibida solicitud para almacenar Patient");
+        logger.info("Recibida solicitud para almacenar Patient"); // Poner mensajes en inglés para usar el mismo idioma en todo el sistema
         ValidationResult result = validationService.validatePatient(jsonPatient);
         if (result == null) {
             logger.error("Error: Resultado de validación es null");
@@ -90,7 +93,6 @@ public class FHIRBaseController {
 
         logger.info("Recibida solicitud para almacenar recurso de tipo {}", resourceType);
 
-        // Aquí podría añadirse validación específica según el tipo de recurso
 
         try {
             String response = fhirBaseService.storeResource(resourceType, jsonResource);

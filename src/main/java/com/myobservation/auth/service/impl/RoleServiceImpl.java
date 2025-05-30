@@ -40,7 +40,7 @@ public class RoleServiceImpl implements RoleService {
     public Role createRole(Role role) {
         // Validar que el rol no exista ya (por nombre, que es único)
         if (roleRepository.findByName(role.getName()).isPresent()) {
-            throw new IllegalArgumentException("El rol con nombre '" + role.getName() + "' ya existe");
+            throw new IllegalArgumentException("Rol with name: '" + role.getName() + "' already exits");
         }
         return roleRepository.save(role);
     }
@@ -51,12 +51,12 @@ public class RoleServiceImpl implements RoleService {
     public void assignRolesToUser(Long userId, List<String> roleNames) {
         // Buscar al usuario por ID
         MyUser user = myUserRepository.findById(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Usuario con ID " + userId + " no encontrado"));
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
 
         // Obtener los roles existentes por sus nombres
         Set<Role> rolesToAssign = roleNames.stream()
                 .map(roleName -> roleRepository.findByName(roleName)
-                        .orElseThrow(() -> new IllegalArgumentException("Rol con nombre '" + roleName + "' no encontrado")))
+                        .orElseThrow(() -> new IllegalArgumentException("Name rol '" + roleName + "' not found")))
                 .collect(Collectors.toSet());
 
         // Asignar los roles al usuario

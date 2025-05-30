@@ -28,15 +28,15 @@ public class PractitionerService {
         this.fhirBaseService = fhirBaseService;
         this.objectMapper = objectMapper;
     }
+
     @Transactional
     public PractitionerResponseDTO registerNewPractitioner(String practitionerJson, String nationalId) {
         Optional<PractitionerMasterIndex> existingPmi = practitionerRepository.findByNationalId(nationalId);
         if (existingPmi.isPresent()) {
-            throw new RuntimeException("Profesional con DNI/NIE " + nationalId + " ya existe.");
+            throw new RuntimeException("Practitioner with DNI " + nationalId + " already exists.");
         }
 
         // Almacenar el recurso Practitioner en Aidbox
-        // --- CAMBIO AQUÍ: Añade "Practitioner" como primer argumento ---
         String fhirResponseJson = fhirBaseService.storeResource("Practitioner", practitionerJson);
         String fhirId;
         String name;
@@ -45,10 +45,8 @@ public class PractitionerService {
         try {
             JsonNode rootNode = objectMapper.readTree(fhirResponseJson);
             fhirId = rootNode.path("id").asText();
-            // Ejemplo de cómo extraer nombre/especialidad del JSON FHIR (ajusta según tu estructura FHIR Practitioner)
             // Es crucial que esta lógica de extracción de 'name' y 'specialty' sea robusta y coincida con el FHIR JSON que envías/recibes.
             // Si 'name' puede ser un array vacío o el 'given' o 'family' no existen, esto podría lanzar un NullPointerException.
-            // Considera usar Optional o comprobar si los nodos existen antes de llamar a .asText().
             JsonNode nameNode = rootNode.path("name");
             if (nameNode.isArray() && nameNode.size() > 0) {
                 JsonNode firstGivenName = nameNode.path(0).path("given").path(0);
@@ -67,27 +65,27 @@ public class PractitionerService {
             }
 
         } catch (Exception e) {
-            throw new RuntimeException("Error al parsear la respuesta de Aidbox para obtener el FHIR ID/datos del profesional: " + e.getMessage(), e);
+            throw new RuntimeException("Error response parsing from Aidbox to obtain FHIR ID and profesional data: " + e.getMessage(), e);
         }
 
         PractitionerMasterIndex pmiEntry = new PractitionerMasterIndex();
         pmiEntry.setNationalId(nationalId);
         pmiEntry.setFhirId(fhirId);
-        pmiEntry.setName(name); // Guarda el nombre extraído
-        pmiEntry.setSpecialty(specialty); // Guarda la especialidad extraída
+        pmiEntry.setName(name);
+        pmiEntry.setSpecialty(specialty);
 
         PractitionerMasterIndex savedPmi = practitionerRepository.save(pmiEntry);
 
         return new PractitionerResponseDTO(savedPmi, fhirResponseJson);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true) // Solo lectura probar en otros servicios para mayor robustez
     public PractitionerResponseDTO getPractitionerByNationalIdWithFhirData(String nationalId) {
         PractitionerMasterIndex pmiEntry = practitionerRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Profesional con DNI/NIE " + nationalId + " no encontrado en el PMI."));
+                .orElseThrow(() -> new RuntimeException("Practitioner with DNI " + nationalId + " not found in the PMI."));
 
         String fhirPractitionerJson = fhirBaseService.getResourceById("Practitioner", pmiEntry.getFhirId())
-                .orElseThrow(() -> new RuntimeException("Recurso Practitioner no encontrado en Aidbox con ID: " + pmiEntry.getFhirId()));
+                .orElseThrow(() -> new RuntimeException("Resource Practitioner not found in Aidbox with ID: " + pmiEntry.getFhirId()));
 
         return new PractitionerResponseDTO(pmiEntry, fhirPractitionerJson);
     }
@@ -98,7 +96,7 @@ public class PractitionerService {
 
         return allPmis.stream().map(pmi -> {
             String fhirPractitionerJson;
-            try {
+            try { // El parseo es en bruto buscar opcion de pretty print
                 fhirPractitionerJson = fhirBaseService.getResourceById("Practitioner", pmi.getFhirId())
                         .orElse("{\"resourceType\":\"Practitioner\",\"id\":\"" + pmi.getFhirId() + "\",\"identifier\":[{\"system\":\"error\",\"value\":\"" + pmi.getNationalId() + "\"}],\"name\":[{\"family\":\"Error\",\"given\":[\"Missing FHIR Data\"]}],\"gender\":\"unknown\"}"); // Fallback JSON
             } catch (Exception e) {
@@ -114,14 +112,11 @@ public class PractitionerService {
         PractitionerMasterIndex existingPractitioner = practitionerRepository.findByNationalId(nationalId)
                 .orElseThrow(() -> new RuntimeException("Profesional con DNI/NIE " + nationalId + " no encontrado para eliminar."));
 
-        // Opcional: Eliminar el recurso FHIR de Aidbox
         // fhirBaseService.deleteResource("Practitioner", existingPractitioner.getFhirId());
 
         practitionerRepository.delete(existingPractitioner);
     }
 
-    // Necesitarás un PractitionerRepository similar a PatientMasterRepository
-    // public interface PractitionerRepository extends JpaRepository<PractitionerMasterIndex, Long> {
     //     Optional<PractitionerMasterIndex> findByNationalId(String nationalId);
     //     Optional<PractitionerMasterIndex> findByFhirId(String fhirId);
     // }

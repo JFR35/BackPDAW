@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+/**
+ * Controlador con endpoints para comprobar intermanete las validaciones, util antes de enviar datos a Aidbox
+ * para comprobar validaciones locales acordes al StructureDefinition
+ */
 @RestController
 @RequestMapping("/api/fhir")
 public class FhirController {

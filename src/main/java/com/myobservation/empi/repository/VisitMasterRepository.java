@@ -12,5 +12,5 @@ import java.util.Optional;
 @Repository
 public interface VisitMasterRepository extends JpaRepository<Visit, Long> {
     List<Visit> findByPatient(PatientMasterIndex patient);
-    Optional<Visit> findByVisitUuid(String visitUuid); // <-- ¡CAMBIO AQUÍ!
+    Optional<Visit> findByVisitUuid(String visitUuid);
 }

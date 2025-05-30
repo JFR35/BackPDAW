@@ -7,6 +7,11 @@ import jakarta.validation.constraints.PositiveOrZero;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+/**
+ * Encapsular datos para enviar información estructurada desde y hacia el front
+ * Estandariza los datos y asegura que sean correctos antes de persistir, como cualquier DTO
+ * Incopora validaciones @NotBlank
+ */
 public class BloodPressureRequestDTO implements Serializable {
 
     private static final long serialVersionUID = 1L;

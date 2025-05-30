@@ -14,13 +14,10 @@ public interface PatientMasterRepository extends JpaRepository<PatientMasterInde
 
     Optional<PatientMasterIndex> findByNationalId(String nationalId);
 
-    // --- ¡Añade este método! ---
+    // Buscar por medico asignado, aún no esta implementada la relación en el servicio
     List<PatientMasterIndex> findByAssignedPractitioner(PractitionerMasterIndex practitioner);
 
-    // Si también necesitaras buscar por el fhirId del practicante asignado directamente:
+    // Buscar por fhirId directamente
     // List<PatientMasterIndex> findByAssignedPractitionerFhirId(String fhirId);
-
-    // Otros métodos de búsqueda si los tienes...
-    // Optional<PatientMasterIndex> findByFhirId(String fhirId);
     Optional<PatientMasterIndex> findByEhrId(String ehrId);
 }

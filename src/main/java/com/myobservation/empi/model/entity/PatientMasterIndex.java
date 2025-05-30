@@ -1,4 +1,3 @@
-// src/main/java/com/myobservation/empi/model/entity/PatientMasterIndex.java
 package com.myobservation.empi.model.entity;
 
 import jakarta.persistence.*;
@@ -9,10 +8,10 @@ import java.time.LocalDateTime;
 public class PatientMasterIndex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ID interno de tu EMPI
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    private String nationalId; // DNI/NIE del paciente
+    private String nationalId;
 
     @Column(unique = true)
     private String fhirId; // ID del recurso Patient en Aidbox

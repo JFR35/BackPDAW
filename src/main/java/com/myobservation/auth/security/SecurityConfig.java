@@ -101,10 +101,12 @@ public class SecurityConfig {
      *
      * @return Fuente de configuración CORS.
      */
+
+    // Estraer este método a una clase de config
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Origen de tu frontend
+        configuration.setAllowedOrigins(List.of("http://localhost:5173")); // Origen del frontend
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("*"));
         configuration.setAllowCredentials(true);

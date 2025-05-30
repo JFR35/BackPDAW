@@ -3,7 +3,7 @@ package com.myobservation.empi.model.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
-import java.time.OffsetDateTime; // O LocalDateTime si prefieres
+import java.time.OffsetDateTime; // O LocalDateTime hay que unificar el formato de fechas en todo el sistema
 
 public class VisitRequestDTO {
 

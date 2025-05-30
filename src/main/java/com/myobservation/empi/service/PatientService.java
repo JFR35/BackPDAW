@@ -21,6 +21,9 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * Usar transational ya que hay operaciones en varias tablas y de distintos proveedores
+ */
 @Service
 public class PatientService {
 
@@ -49,7 +52,7 @@ public class PatientService {
     public PatientResponseDTO registerNewPatient(String patientJson, String nationalId) {
         Optional<PatientMasterIndex> existingPmi = pmiRepository.findByNationalId(nationalId);
         if (existingPmi.isPresent()) {
-            throw new RuntimeException("Paciente con DNI/NIE " + nationalId + " ya existe.");
+            throw new RuntimeException("Patient with DNI " + nationalId + " already exists.");
         }
 
         String fhirResponseJson = fhirBaseService.storePatient(patientJson);
@@ -58,7 +61,7 @@ public class PatientService {
             JsonNode rootNode = objectMapper.readTree(fhirResponseJson);
             fhirId = rootNode.path("id").asText();
         } catch (Exception e) {
-            throw new RuntimeException("Error al parsear la respuesta de Aidbox para obtener el FHIR ID", e);
+            throw new RuntimeException("Parsing response error from Aidbox to obtain FHIR ID", e);
         }
 
         UUID ehrId = ehrBaseService.createPatientEhr(nationalId);
@@ -67,10 +70,8 @@ public class PatientService {
         pmiEntry.setNationalId(nationalId);
         pmiEntry.setFhirId(fhirId);
         pmiEntry.setEhrId(String.valueOf(ehrId));
-        // Aquí no se guarda el fhirPatientJson en el PMI porque ya lo tienes en Aidbox
 
         PatientMasterIndex savedPmi = pmiRepository.save(pmiEntry);
-
         // Retorna el DTO con la información del PMI y el JSON de FHIR
         return new PatientResponseDTO(savedPmi, fhirResponseJson);
     }
@@ -78,10 +79,10 @@ public class PatientService {
     @Transactional(readOnly = true)
     public PatientResponseDTO getPatientByNationalIdWithFhirData(String nationalId) {
         PatientMasterIndex pmiEntry = pmiRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado en el PMI."));
+                .orElseThrow(() -> new RuntimeException("Patient with DNI " + nationalId + " not found in the PMI."));
 
         String fhirPatientJson = fhirBaseService.getResourceById("Patient", pmiEntry.getFhirId())
-                .orElseThrow(() -> new RuntimeException("Recurso Patient no encontrado en Aidbox con ID: " + pmiEntry.getFhirId()));
+                .orElseThrow(() -> new RuntimeException("Resource Patient not found in Aidbox with ID: " + pmiEntry.getFhirId()));
 
         return new PatientResponseDTO(pmiEntry, fhirPatientJson);
     }
@@ -93,7 +94,7 @@ public class PatientService {
         return allPmis.stream().map(pmi -> {
             String fhirPatientJson;
             try {
-                // Intenta obtener el recurso FHIR del Aidbox
+                // Intentar obtener el recurso FHIR del Aidbox, ver la posibilidad en FHIR de devolver un Json más amigable tipo pretty print
                 fhirPatientJson = fhirBaseService.getResourceById("Patient", pmi.getFhirId())
                         .orElse("{\"resourceType\":\"Patient\",\"id\":\"" + pmi.getFhirId() + "\",\"identifier\":[{\"system\":\"error\",\"value\":\"" + pmi.getNationalId() + "\"}],\"name\":[{\"family\":\"Error\",\"given\":[\"Missing FHIR Data\"]}],\"gender\":\"unknown\",\"birthDate\":\"1900-01-01\"}"); // Fallback JSON si no se encuentra
             } catch (Exception e) {
@@ -109,14 +110,10 @@ public class PatientService {
     @Transactional
     public PatientResponseDTO updatePatient(String nationalId, String updatedFhirPatientJson) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado para actualizar."));
+                .orElseThrow(() -> new RuntimeException("Patient with DNI " + nationalId + " not found"));
 
         // Actualizar el recurso FHIR en Aidbox
         String updatedFhirResponseJson = fhirBaseService.updateResource("Patient", existingPatient.getFhirId(), updatedFhirPatientJson);
-
-        // Opcional: Si el FHIR ID o el DNI/NIE pudiera cambiar en la actualización de FHIR, lo actualizarías aquí
-        // Por ahora, asumimos que nationalId y fhirId son estables.
-
         // Retornar el DTO actualizado
         return new PatientResponseDTO(existingPatient, updatedFhirResponseJson);
     }
@@ -125,17 +122,11 @@ public class PatientService {
     @Transactional
     public void deletePatient(String nationalId) {
         PatientMasterIndex existingPatient = pmiRepository.findByNationalId(nationalId)
-                .orElseThrow(() -> new RuntimeException("Paciente con DNI/NIE " + nationalId + " no encontrado para eliminar."));
+                .orElseThrow(() -> new RuntimeException("Patient with DNI " + nationalId + " not found."));
 
-        // Opcional: Eliminar el recurso FHIR de Aidbox y el EHR de EHRbase
-        // fhirBaseService.deleteResource("Patient", existingPatient.getFhirId());
         // ehrBaseService.deleteEhr(existingPatient.getEhrId());
 
         pmiRepository.delete(existingPatient);
     }
 
-    // ... (Mantén el resto de tus métodos como assignPractitionerToPatient, createBloodPressureRecord, getBloodPressureHistory)
-    // Asegúrate de que los métodos que devuelven PMI directo o Map no se usen para el frontend directamente
-    // Si tienes un método getPatientData (Map), considera deprecatearlo o renombrarlo para evitar confusiones.
-    // getPatientByNationalId (Optional<PatientMasterIndex>) también es solo para uso interno si ya tienes getPatientByNationalIdWithFhirData
 }

@@ -1,4 +1,3 @@
-// src/main/java/com/myobservation/empi/model/entity/PractitionerMasterIndex.java
 package com.myobservation.empi.model.entity;
 
 import jakarta.persistence.*;
@@ -10,22 +9,22 @@ import java.util.List;
 public class PractitionerMasterIndex {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // ID interno de tu EMPI
+    private Long id;
 
     @Column(unique = true, nullable = false)
-    private String nationalId; // DNI/NIE del profesional
+    private String nationalId; // DNI, pero ver la posibilidad de cambiar a licencia profesional estandarizada
 
     @Column(unique = true, nullable = false)
     private String fhirId; // ID del recurso Practitioner en Aidbox
 
-    private String name; // Nombre completo del profesional
-    private String specialty; // Especialidad del profesional
+    private String name;
+    private String specialty;
 
-    private LocalDateTime createdAt;
+    private LocalDateTime createdAt; // Auditoria interna
     private LocalDateTime updatedAt;
 
     @OneToMany(mappedBy = "assignedPractitioner", fetch = FetchType.LAZY)
-    private List<PatientMasterIndex> patients; // Relación con pacientes asignados
+    private List<PatientMasterIndex> patients; // Relación con los pacientes asignados, carga LAZY "Perezosa"
 
     @PrePersist
     protected void onCreate() {

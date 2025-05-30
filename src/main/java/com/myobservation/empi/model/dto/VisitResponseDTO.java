@@ -1,23 +1,22 @@
-// src/main/java/com/myobservation/empi/model/dto/VisitResponseDTO.java
 package com.myobservation.empi.model.dto;
 
 import com.myobservation.empi.model.entity.Visit;
 import java.time.LocalDateTime;
 
 public class VisitResponseDTO {
-    private String visitUuid; // UUID de la visita
+    private String visitUuid;
     private String patientNationalId;
     private String practitionerNationalId;
     private String practitionerName; // Para mostrar en el frontend
     private LocalDateTime visitDate;
-    private String bloodPressureCompositionId; // Si se registró una medición
+    private String bloodPressureCompositionId;
 
     // Constructor desde la entidad Visit
     public VisitResponseDTO(Visit visit) {
         this.visitUuid = visit.getVisitUuid();
         this.patientNationalId = visit.getPatient().getNationalId();
         this.practitionerNationalId = visit.getPractitioner().getNationalId();
-        this.practitionerName = visit.getPractitioner().getName(); // Asumiendo que PractitionerMasterIndex tiene getName()
+        this.practitionerName = visit.getPractitioner().getName();
         this.visitDate = visit.getVisitDate();
         this.bloodPressureCompositionId = visit.getBloodPressureCompositionId();
     }

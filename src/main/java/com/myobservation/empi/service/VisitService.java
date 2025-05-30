@@ -23,7 +23,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-public class VisitService { // Renombrado de CombinedObservationVisitService
+public class VisitService {
     private static final Logger logger = LoggerFactory.getLogger(VisitService.class);
 
     private final EhrBaseService ehrBaseService;
@@ -46,28 +46,27 @@ public class VisitService { // Renombrado de CombinedObservationVisitService
         logger.debug("Attempting to create visit for patient: {}, practitioner: {}",
                 requestDTO.getPatientNationalId(), requestDTO.getPractitionerNationalId());
 
-        // 1. Validar y obtener PatientMasterIndex
+        // Validar y obtener PatientMasterIndex
         PatientMasterIndex patient = patientRepository.findByNationalId(requestDTO.getPatientNationalId())
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con DNI: " + requestDTO.getPatientNationalId()));
+                .orElseThrow(() -> new IllegalArgumentException("Patient not found DNI: " + requestDTO.getPatientNationalId()));
 
-        // 2. Validar y obtener PractitionerMasterIndex
+        // Validar y obtener PractitionerMasterIndex
         PractitionerMasterIndex practitioner = practitionerRepository.findByNationalId(requestDTO.getPractitionerNationalId())
-                .orElseThrow(() -> new IllegalArgumentException("Profesional no encontrado con DNI: " + requestDTO.getPractitionerNationalId()));
+                .orElseThrow(() -> new IllegalArgumentException("Profesional not found with DNI: " + requestDTO.getPractitionerNationalId()));
 
-        // 3. Crear la entidad Visit (inicialmente sin compositionId)
+        // Crear la entidad Visit inicialmente sin compositionId
         Visit visit = new Visit();
         visit.setPatient(patient);
         visit.setPractitioner(practitioner);
-        // Usa la fecha del DTO o la actual si no se proporciona
         visit.setVisitDate(requestDTO.getVisitDate() != null ? requestDTO.getVisitDate().toLocalDateTime() : LocalDateTime.now());
-        // El visitUuid se genera en @PrePersist en la entidad Visit
-        Visit savedVisit = visitRepository.save(visit); // Guarda la visita para obtener el ID y UUID
+        // El visitUuid se genera en el método @PrePersist en la entidad Visit
+        Visit savedVisit = visitRepository.save(visit); //
 
         logger.debug("Visit created in EMPI DB with UUID: {}", savedVisit.getVisitUuid());
 
         String compositionId = null;
         if (requestDTO.getBloodPressureMeasurement() != null) {
-            // 4. Preparar y enviar la medición de presión arterial a EHRbase
+            // Preparar y enviar la medición a EHRbase
             BloodPressureMeasurementDto bpDto = requestDTO.getBloodPressureMeasurement();
 
             BloodPressureRequestDTO ehrBaseBpRequest = new BloodPressureRequestDTO();
@@ -76,16 +75,14 @@ public class VisitService { // Renombrado de CombinedObservationVisitService
             ehrBaseBpRequest.setDiastolic(bpDto.getDiastolicMagnitude());
             ehrBaseBpRequest.setLocation(bpDto.getLocation());
             ehrBaseBpRequest.setComposerName(bpDto.getMeasuredBy());
-            // Utiliza la fecha de la medición específica si está disponible, si no, la de la visita
             ehrBaseBpRequest.setMeasurementTime(bpDto.getDate() != null ? bpDto.getDate().toLocalDateTime() : savedVisit.getVisitDate());
 
-            // Asegurar que el EHR del paciente exista en EHRbase
-            // Mejor no crear el EHR aquí, el EHR debería ser parte del ciclo de vida del paciente
+            // Asegurar que el EHR del paciente ya exista en EHRbase
+            // Es mejor no crear el EHR aquí, ya que el EHR debería ser parte del ciclo de vida del paciente
             // Cuando un paciente se registra en EMPI, se crea su EHR.
             // Aquí, simplemente obtenemos el EHR ID del PatientMasterIndex
             if (patient.getEhrId() == null) {
                 // Esto no debería pasar si el flujo de registro de paciente crea el EHR.
-                // Si se permite, se podría crear aquí, pero idealmente se maneja al crear el paciente.
                 logger.warn("Patient {} does not have an EHR ID in EMPI. Attempting to create one.", patient.getNationalId());
                 UUID newEhrId = ehrBaseService.createPatientEhr(patient.getNationalId());
                 patient.setEhrId(newEhrId.toString());
@@ -97,7 +94,7 @@ public class VisitService { // Renombrado de CombinedObservationVisitService
             compositionId = ehrBaseService.createBloodPressureComposition(ehrBaseBpRequest, patient.getEhrId());
             logger.debug("Blood Pressure Composition created in EHRbase with ID: {}", compositionId);
 
-            // 5. Actualizar la entidad Visit con el compositionId
+            // Actualizar la entidad Visit con el compositionId
             savedVisit.setBloodPressureCompositionId(compositionId);
             visitRepository.save(savedVisit);
             logger.debug("Visit updated with Blood Pressure Composition ID: {}", compositionId);
@@ -112,25 +109,18 @@ public class VisitService { // Renombrado de CombinedObservationVisitService
     @Transactional(readOnly = true)
     public VisitResponseDTO getVisitByUuid(String visitUuid) {
         Visit visit = visitRepository.findByVisitUuid(visitUuid)
-                .orElseThrow(() -> new IllegalArgumentException("Visita no encontrada con UUID: " + visitUuid));
+                .orElseThrow(() -> new IllegalArgumentException("Visit not found with UUID: " + visitUuid));
         return new VisitResponseDTO(visit);
     }
 
     @Transactional(readOnly = true)
     public List<VisitResponseDTO> getVisitsByPatientNationalId(String patientNationalId) {
         PatientMasterIndex patient = patientRepository.findByNationalId(patientNationalId)
-                .orElseThrow(() -> new IllegalArgumentException("Paciente no encontrado con DNI: " + patientNationalId));
+                .orElseThrow(() -> new IllegalArgumentException("Patient not found with DNI: " + patientNationalId));
 
         List<Visit> visits = visitRepository.findByPatient(patient);
         return visits.stream()
                 .map(VisitResponseDTO::new)
                 .collect(Collectors.toList());
     }
-
-    // Aquí podrías añadir métodos para obtener mediciones si no vienen con la visita.
-    // getBloodPressureMeasurementsForVisit(String visitUuid):
-    //     Debería obtener el compositionId de la visita y luego usar ehrBaseService para obtener la composición.
-    //     Esto requeriría un método en EhrBaseService para leer composiciones.
-    // getBloodPressureHistoryForPatient (si no lo tienes ya en PatientService)
-    //     También necesitarías una forma de obtener todas las composiciones de BP de un EHR.
 }

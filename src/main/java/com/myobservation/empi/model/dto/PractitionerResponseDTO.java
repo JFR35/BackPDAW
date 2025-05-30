@@ -3,12 +3,12 @@ package com.myobservation.empi.model.dto;
 import com.myobservation.empi.model.entity.PractitionerMasterIndex;
 
 public class PractitionerResponseDTO {
-    private Long id; // ID interno del EMPI
-    private String nationalId; // DNI/NIE del profesional
+    private Long id;
+    private String nationalId;
     private String fhirId; // ID del recurso Practitioner en Aidbox
-    private String name; // Nombre del profesional
-    private String specialty; // Especialidad del profesional
-    private String fhirPractitionerJson; // <--- ¡La representación JSON COMPLETA del recurso FHIR Practitioner!
+    private String name;
+    private String specialty;
+    private String fhirPractitionerJson; // Es la representación completa  del JSON del recurso FHIR Practitioner
 
     // Constructor para facilitar la creación desde PractitionerMasterIndex y el JSON de FHIR
     public PractitionerResponseDTO(PractitionerMasterIndex pmi, String fhirPractitionerJson) {
