@@ -16,12 +16,16 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * Clase para cargar el structureDefinition y validar con HAPI FHIR
+ */
 @Service
 public class StructureDefinitionLoaderServiceImpl implements StructureDefinitionLoader {
     private static final Logger logger = LoggerFactory.getLogger(StructureDefinitionLoaderServiceImpl.class);
     private final FhirContext fhirContext;
     private final IParser jsonParser;
     private final ValidationSupportChain validationSupportChain;
+
 
     @Autowired
     public StructureDefinitionLoaderServiceImpl(FhirContext fhirContext, ValidationSupportChain validationSupportChain) {
@@ -58,6 +62,7 @@ public class StructureDefinitionLoaderServiceImpl implements StructureDefinition
     public void init() {
         logger.info("INIT StructureDefinitionLoaderServiceImpl...");
         List<String> profiles = List.of(
+                // ArrayList dinámico
                 "fhir-profiles/mi-paciente-persistencia.json",
                 "fhir-profiles/mi-practitioner-persistencia.json"
         );

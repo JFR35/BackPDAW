@@ -31,6 +31,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
 
+/**
+ * Hay que refactorizar por completo esta clase
+ */
 @Service
 public class EhrBaseService {
 
@@ -41,6 +44,7 @@ public class EhrBaseService {
     private final TemplateProvider templateProvider;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    // Aunque las variables están definidas en Config las repito para mayor seguridad
     @Value("${ehrbase.url}")
     private String ehrBaseUrl;
 
@@ -149,6 +153,7 @@ public class EhrBaseService {
             return false;
         }
     }
+
     /*
     public void registerTemplate() {
         try {
@@ -166,6 +171,7 @@ public class EhrBaseService {
 
      */
 
+    // Listar las plantillas que ya han sido registrados
     public void registerTemplate() {
         try {
             File templateFile = new File(templatePath + "/presion_sanguinea.opt");
@@ -180,6 +186,7 @@ public class EhrBaseService {
         }
     }
 
+    // Verifica la conexión establecida con la API de EHRbase
     public boolean verifyConnection() {
         try {
             openEhrClient.ehrEndpoint().getEhrStatus(UUID.randomUUID());
@@ -190,14 +197,24 @@ public class EhrBaseService {
         }
     }
 
+    /**
+     * Crear una nueva composición
+     * @param requestDTO Recibe el requestDTO con la estructura de datos
+     * @param ehrId Recibe el ehrId creado para identificar la composición
+     * @return
+     */
     public String createBloodPressureComposition(BloodPressureRequestDTO requestDTO, String ehrId) {
         try {
+            // Busca el template necesacion para crear la composición
             Optional<?> template = templateProvider.find(TEMPLATE_ID);
             if (template.isEmpty()) {
-                throw new RuntimeException("La plantilla 'presion_sanguinea' no está registrada en EHRbase.");
+                throw new RuntimeException("Template 'presion_sanguinea' is not registered in EHRbase.");
             }
+            // Genera el UUID del EHR, creando uno nuevo en caso de no proporcionarse
             UUID ehrUUID = ehrId != null ? UUID.fromString(ehrId) : createPatientEhr(requestDTO.getPatientId());
+            // Crea la composición con los datos proporcionados
             BloodPressureComposition composition = createBPComposition(requestDTO, ehrUUID);
+            // Guarda la composición y retorna su ID
             return saveComposition(composition, ehrUUID);
         } catch (Exception e) {
             logger.error("Failed to create blood pressure composition for ehrId {}: {}", ehrId, e.getMessage(), e);
@@ -205,8 +222,10 @@ public class EhrBaseService {
         }
     }
 
+    // Metodo para crear un nuevo registro
     public UUID createPatientEhr(String patientId) {
         try {
+            // Obtiene el endpoint de EHRbase y crea un nuevo EHR
             EhrEndpoint ehrEndpoint = openEhrClient.ehrEndpoint();
             UUID ehrId = ehrEndpoint.createEhr();
             logger.info("Created EHR for patient: {} with ID: {}", patientId, ehrId);
@@ -216,17 +235,19 @@ public class EhrBaseService {
         }
     }
 
+    // Método privado para construir la composición de presion arterial
     private BloodPressureComposition createBPComposition(BloodPressureRequestDTO requestDTO, UUID ehrId) {
+        // Inicializa la composición
         BloodPressureComposition composition = new BloodPressureComposition();
-
+        // Configura idioma, y territorio
         composition.setLanguage(Language.EN);
         composition.setTerritory(Territory.ES);
         composition.setCategoryDefiningCode(Category.EVENT);
         composition.setSettingDefiningCode(Setting.OTHER_CARE);
-
+        // Asigna la fecha y hora de la medición
         composition.setStartTimeValue(requestDTO.getMeasurementTime().atOffset(ZoneOffset.UTC));
-
-        PartyIdentified composer = new PartyIdentified();
+        // Establece el practitioner autor de la composión
+        PartyIdentified composer = new PartyIdentified(); // El sujeto de la medición es el propio paciente
         composer.setName(requestDTO.getComposerName());
         composition.setComposer(composer);
 
@@ -234,13 +255,13 @@ public class EhrBaseService {
         bpObservation.setSubject(new PartySelf());
         bpObservation.setOriginValue(requestDTO.getMeasurementTime().atOffset(ZoneOffset.UTC));
         bpObservation.setLanguage(Language.EN);
-
+        // Determina la ubicación física donde se produce la medición
         BloodPressureLocationOfMeasurementDvCodedText locationOfMeasurement = new BloodPressureLocationOfMeasurementDvCodedText();
         locationOfMeasurement.setLocationOfMeasurementDefiningCode(LocationOfMeasurementDefiningCode.RIGHT_ARM);
         bpObservation.setLocationOfMeasurement(locationOfMeasurement);
-
+        // Método utilizado
         bpObservation.setMethodDefiningCode(MethodDefiningCode.AUSCULTATION);
-
+        // Crea un nuevo evento de la medición
         BloodPressureAnyEventPointEvent event = new BloodPressureAnyEventPointEvent();
         event.setSystolicMagnitude(requestDTO.getSystolic());
         event.setSystolicUnits("mm[Hg]");
@@ -250,10 +271,11 @@ public class EhrBaseService {
         event.setTimeValue(requestDTO.getMeasurementTime().atOffset(ZoneOffset.UTC));
 
         if (requestDTO.getMeanArterialPressure() != null) {
-            // Descomentar si los métodos existen
+            // Añadir metododos para calcular la presión arterial media
             // event.setMeanArterialPressureMagnitude(requestDTO.getMeanArterialPressure());
             // event.setMeanArterialPressureUnits("mm[Hg]");
         }
+        // Asigna el evento de medición a la observación de presión arterial
         bpObservation.setAnyEvent(Collections.singletonList(event));
         composition.setBloodPressure(bpObservation);
 
@@ -323,7 +345,6 @@ public class EhrBaseService {
         if (compositionId == null || compositionId.isEmpty()) {
             throw new IllegalArgumentException("Composition ID cannot be empty");
         }
-        // Aquí podrías añadir más validaciones específicas para el formato de compositionId
     }
 
     public String getComposition(String ehrId, String compositionId) {
@@ -403,8 +424,7 @@ public class EhrBaseService {
     private HttpHeaders createAuthenticatedHeaders() {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        // Añadir autenticación según tu configuración de EHRbase
-        // headers.setBasicAuth("username", "password");
+        // headers.setBasicAuth("username", "password") se envían en el header de la request;
         return headers;
     }
 
@@ -417,7 +437,7 @@ public class EhrBaseService {
         try {
             String aqlQuery = "SELECT c FROM EHR e CONTAINS COMPOSITION c WHERE e/ehr_id/value = '" + ehrId + "'";
 
-            HttpHeaders headers = createAuthenticatedHeaders(); // <-- Aquí corriges el error
+            HttpHeaders headers = createAuthenticatedHeaders();
             HttpEntity<String> request = new HttpEntity<>(aqlQuery, headers);
 
             ResponseEntity<String> response = restTemplate.exchange(
@@ -436,10 +456,9 @@ public class EhrBaseService {
             }
             return compositions;
         } catch (Exception e) {
-            logger.error("Error al obtener composiciones para ehrId {}: {}", ehrId, e.getMessage());
+            logger.error("Error retrieving composition to ehrId {}: {}", ehrId, e.getMessage());
             return Collections.emptyList();
         }
     }
-
 
 }

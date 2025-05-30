@@ -3,16 +3,16 @@ package com.myobservation.empi.model.dto;
 import com.myobservation.empi.model.entity.PatientMasterIndex;
 
 public class PatientResponseDTO {
-    private Long id; // EMPI ID
+    private Long id;
     private String nationalId;
     private String fhirId;
     private String ehrId;
-    private String fhirPatientJson; // <-- The full FHIR Patient JSON string
-    private String assignedPractitionerNationalId; // If you want to expose practitioner ID
-    private String assignedPractitionerFhirId; // If you want to expose practitioner FHIR ID
-    // You could also include a DTO for Practitioner here if needed
+    private String fhirPatientJson; // <-- Devolver completo el FHIR patient Json
+    private String assignedPractitionerNationalId; // Todos los datos para mayor depuración
+    private String assignedPractitionerFhirId; // De momento se devuelven todos los datos para mayor depuración
+    // También se podría incluir un practitioner para la asociación
 
-    // Optional constructor to convert from PatientMasterIndex and fhirPatientJson
+    // Constructor opcional para convertir desde PatientMasterIndex y fhirPatientJson
     public PatientResponseDTO(PatientMasterIndex pmi, String fhirPatientJson) {
         this.id = pmi.getId();
         this.nationalId = pmi.getNationalId();
@@ -25,6 +25,7 @@ public class PatientResponseDTO {
         }
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }

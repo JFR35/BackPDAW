@@ -3,7 +3,7 @@ package com.myobservation.empi.controller;
 
 import com.myobservation.ehrbridge.model.BloodPressureRequestDTO;
 import com.myobservation.empi.model.dto.BloodPressureMeasurementDto;
-import com.myobservation.empi.model.dto.PatientResponseDTO; // <--- Importa el DTO
+import com.myobservation.empi.model.dto.PatientResponseDTO;
 import com.myobservation.empi.model.entity.PatientMasterIndex;
 import com.myobservation.empi.service.PatientService;
 import jakarta.validation.Valid;
@@ -13,9 +13,12 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map; // Para errores o respuestas específicas
-import java.util.Optional; // Para respuestas de Optional
+import java.util.Map;
+import java.util.Optional;
 
+/**
+ * Controlador para el EMPI local de pacientes Patients
+ */
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
@@ -26,8 +29,8 @@ public class PatientController {
         this.patientService = patientService;
     }
 
-    @PostMapping // POST /api/patients
-    public ResponseEntity<PatientResponseDTO> registerPatient( // <--- Retorna el DTO
+    @PostMapping // URL --> POST /api/patients
+    public ResponseEntity<PatientResponseDTO> registerPatient(
                                                                @RequestBody String fhirPatientJson, // FHIR JSON enviado por el frontend
                                                                @RequestParam String nationalId) {
         try {
@@ -35,37 +38,38 @@ public class PatientController {
             return new ResponseEntity<>(patientDto, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null); // O un DTO de error si lo defines
+                    .body(null);
         }
     }
 
-    @GetMapping("/{nationalId}") // GET /api/patients/{nationalId}
-    public ResponseEntity<PatientResponseDTO> getPatient(@PathVariable String nationalId) { // <--- Retorna el DTO
+    @GetMapping("/{nationalId}") // URL -> GET /api/patients/{nationalId}
+    public ResponseEntity<PatientResponseDTO> getPatient(@PathVariable String nationalId) {
         try {
-            PatientResponseDTO patientDto = patientService.getPatientByNationalIdWithFhirData(nationalId); // <--- Usa el nuevo método del servicio
+            PatientResponseDTO patientDto = patientService.getPatientByNationalIdWithFhirData(nationalId);
             return ResponseEntity.ok(patientDto);
         } catch (RuntimeException e) {
-            HttpStatus status = (e.getMessage() != null && e.getMessage().contains("no encontrado")) ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
+            HttpStatus status = (e.getMessage() != null && e.getMessage().contains("not found")) ? HttpStatus.NOT_FOUND : HttpStatus.INTERNAL_SERVER_ERROR;
             return ResponseEntity.status(status).body(null);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @GetMapping // GET /api/patients (para obtener la lista)
-    public ResponseEntity<List<PatientResponseDTO>> getAllPatients() { // <--- Retorna una lista de DTOs
+    @GetMapping // URL --> GET /api/patients (para obtener listado)
+    public ResponseEntity<List<PatientResponseDTO>> getAllPatients() {
         try {
-            List<PatientResponseDTO> patients = patientService.getAllPatientsWithFhirData(); // <--- Usa el nuevo método del servicio
+            List<PatientResponseDTO> patients = patientService.getAllPatientsWithFhirData();
             return ResponseEntity.ok(patients);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
+
     /*
-    @PutMapping("/{nationalId}") // PUT /api/patients/{nationalId}
-    public ResponseEntity<PatientResponseDTO> updatePatient( // <--- Retorna el DTO
+    @PutMapping("/{nationalId}") // Método PUT /api/patients/{nationalId}
+    public ResponseEntity<PatientResponseDTO> updatePatient(
                                                              @PathVariable String nationalId,
-                                                             @RequestBody String updatedFhirPatientJson) { // <--- Espera el JSON completo de FHIR para actualizar
+                                                             @RequestBody String updatedFhirPatientJson) {
         try {
             // Asume que tu updatePatient en el servicio actualiza en Aidbox y devuelve el DTO
             PatientResponseDTO patient = patientService.updatePatient(nationalId, updatedFhirPatientJson);
@@ -79,7 +83,7 @@ public class PatientController {
 
      */
     /*
-    @DeleteMapping("/{nationalId}") // DELETE /api/patients/{nationalId}
+    @DeleteMapping("/{nationalId}") // Método DELETE /api/patients/{nationalId}
     public ResponseEntity<Void> deletePatient(@PathVariable String nationalId) {
         try {
             patientService.deletePatient(nationalId);
@@ -93,7 +97,6 @@ public class PatientController {
 
      */
     /*
-    // --- Mantenemos los demás endpoints de relaciones/observaciones si los necesitas ---
     @PostMapping("/{nationalId}/blood-pressure")
     public ResponseEntity<Map<String, String>> addBloodPressureMeasurement(
             @PathVariable String nationalId,

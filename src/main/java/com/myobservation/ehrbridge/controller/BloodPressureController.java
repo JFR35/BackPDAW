@@ -22,11 +22,11 @@ public class BloodPressureController {
     }
 
     /**
-     * Endpoint to create a new blood pressure measurement
+     * Endpoint para crear una nueva medición
      *
-     * @param requestDTO Blood pressure data
-     * @param ehrId Optional EHR ID, if not provided a new one will be created
-     * @return Response with compositionId
+     * @param requestDTO Datos de la presión sanguínea definidos en el DTO
+     * @param ehrId Crea un ehrId si no hay ninguno definido
+     * @return Retorna la composición
      */
     @PostMapping
     public ResponseEntity<Map<String, String>> createBloodPressureMeasurement(
@@ -35,22 +35,19 @@ public class BloodPressureController {
             @RequestParam(required = false)
             String ehrId) {
 
-        // Validate the request
+        // Validar la requestDTO
         if (requestDTO.getSystolic() == null || requestDTO.getDiastolic() == null) {
             throw new IllegalArgumentException("Systolic and diastolic values are required");
         }
-
-        // Save blood pressure data
+        // Guarda la composición
         String compositionId = ehrBaseService.createBloodPressureComposition(requestDTO, ehrId);
-
-        // Return response with the composition ID
+        // Retorna responseDTO con el ID de la composición creada
         Map<String, String> response = new HashMap<>();
         response.put("compositionId", compositionId);
-
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    // Puedes añadir un endpoint para verificar la conexión a Ehrbase si tienes uno
+    // Endpoint para verificar la conexión con Ehrbase
     @GetMapping("/verify-ehrbase")
     public ResponseEntity<String> verifyEhrbaseConnection() {
         if (ehrBaseService.verifyConnection()) {
@@ -60,6 +57,13 @@ public class BloodPressureController {
         }
     }
 
+    /**
+     * Recuperar una composición almacenada en EHRbase por su ehrID
+     * @param ehrId Es el identificador lógico que ehrBase asigna
+     * @param compositionId Identificador de la composición
+     * @param format Por defecto devuelte FLAT no JSON
+     * @return
+     */
     @GetMapping("/{ehrId}/composition/{compositionId}")
     public ResponseEntity<?> getBloodPressureComposition(
             @PathVariable String ehrId,
@@ -81,5 +85,4 @@ public class BloodPressureController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error retrieving composition: " + e.getMessage());
         }
     }
-
 }

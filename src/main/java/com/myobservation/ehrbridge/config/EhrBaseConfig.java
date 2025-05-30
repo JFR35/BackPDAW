@@ -15,11 +15,15 @@ import org.springframework.context.annotation.Configuration;
 import java.io.File;
 import java.net.URI;
 
+/**
+ * Clase para configurar la integración con EHRbase proporcionando el acceso y econexión con el cliente EHRbase
+ */
 @Configuration
 public class EhrBaseConfig {
 
+    // Logger para depuración
     private static final Logger logger = LoggerFactory.getLogger(EhrBaseService.class);
-
+    // Variables para credenciales  definidas en properties, aún no se aplica ningún gestor de secretos
     @Value("${ehrbase.url}")
     private String ehrBaseUrl;
 
@@ -32,6 +36,7 @@ public class EhrBaseConfig {
     @Value("${ehrbase.templates.path}")
     private String templatePath;
 
+    // Carga los archivos de los templates en mi path de resources
     @Bean
     public TemplateProvider templateProvider() {
         File templateDirectory = new File(templatePath);
@@ -47,6 +52,7 @@ public class EhrBaseConfig {
         return provider;
     }
 
+    // Inicializa el cliente EHRbase en la URL definida en las variables
     @Bean
     public OpenEhrClient openEhrClient(TemplateProvider templateProvider) {
         try {

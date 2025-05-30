@@ -22,14 +22,14 @@ public class VisitController {
         this.visitService = visitService;
     }
 
-    @PostMapping // POST /api/visits
+    @PostMapping
     public ResponseEntity<VisitResponseDTO> createVisitWithBloodPressure(@Valid @RequestBody VisitRequestDTO requestDTO) {
         try {
             VisitResponseDTO responseDTO = visitService.createVisitWithBloodPressure(requestDTO);
             return new ResponseEntity<>(responseDTO, HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND) // 404 para paciente/profesional no encontrado
-                    .body(null); // O un DTO de error más detallado
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(null); // Probar a retonar un DTO para ver si da información más completa
         } catch (Exception e) {
             // Log the exception
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -37,7 +37,7 @@ public class VisitController {
         }
     }
 
-    @GetMapping("/{visitUuid}") // GET /api/visits/{visitUuid}
+    @GetMapping("/{visitUuid}")
     public ResponseEntity<VisitResponseDTO> getVisitByUuid(@PathVariable String visitUuid) {
         try {
             VisitResponseDTO visit = visitService.getVisitByUuid(visitUuid);
@@ -49,7 +49,7 @@ public class VisitController {
         }
     }
 
-    @GetMapping("/patient/{patientNationalId}") // GET /api/visits/patient/{patientNationalId}
+    @GetMapping("/patient/{patientNationalId}")
     public ResponseEntity<List<VisitResponseDTO>> getVisitsByPatientNationalId(@PathVariable String patientNationalId) {
         try {
             List<VisitResponseDTO> visits = visitService.getVisitsByPatientNationalId(patientNationalId);
@@ -61,8 +61,8 @@ public class VisitController {
         }
     }
 
-    // Aquí podrías añadir endpoints para:
-    // - Actualizar una visita (quizás su fecha o el profesional asignado)
-    // - Eliminar una visita (considerando la eliminación de la composición en EHRbase)
-    // - Obtener solo mediciones de BP si no quieres obtener toda la visita
+    // Faltan endpoints para:
+    // - Actualizar una visita
+    // - Eliminar una visita considerando que la eliminación de la composición en EHRbase sea efectiva
+    // - Obtener solo mediciones de BP si no se desea obtener toda la visita
 }

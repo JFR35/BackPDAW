@@ -1,7 +1,7 @@
 package com.myobservation.auth.security;
 
 /**
- * Clase inmutable para transportar datos.
+ * Clase para transportar datos.
  * Representa una solicitud de autenticación del usuario.
  * @param email email del usuario
  * @param password contraseña del usuario

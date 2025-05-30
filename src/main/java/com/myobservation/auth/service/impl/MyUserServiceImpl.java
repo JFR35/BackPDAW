@@ -68,7 +68,7 @@ public class MyUserServiceImpl implements UserService {
     public UserResponse createUser(UserRequest userRequest) {
         Optional<MyUser> existingUser = myUserRepository.findByEmail(userRequest.getEmail());
         if (existingUser.isPresent()) {
-            throw new EmailAlreadyExistsException("Su email ya está registrado");
+            throw new EmailAlreadyExistsException("Your email is already registered");
         }
         MyUser user = entityMapper.toMyUser(userRequest);
         String encodedPassword = passwordEncoder.encode(user.getPassword());

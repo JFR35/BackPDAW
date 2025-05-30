@@ -11,7 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/practitioners") // Nuevo RequestMapping para profesionales
+@RequestMapping("/api/practitioners")
 public class PractitionerController {
 
     private final PractitionerService practitionerService;
@@ -21,7 +21,7 @@ public class PractitionerController {
     }
 
     @PostMapping // POST /api/practitioners
-    public ResponseEntity<PractitionerResponseDTO> registerPractitioner( // <--- Retorna el DTO
+    public ResponseEntity<PractitionerResponseDTO> registerPractitioner(
                                                                          @RequestBody String fhirPractitionerJson, // FHIR JSON enviado por el frontend
                                                                          @RequestParam String nationalId) {
         try {
@@ -29,12 +29,12 @@ public class PractitionerController {
             return new ResponseEntity<>(practitionerDto, HttpStatus.CREATED);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(null); // O un DTO de error si lo defines
+                    .body(null);
         }
     }
 
     @GetMapping("/{nationalId}") // GET /api/practitioners/{nationalId}
-    public ResponseEntity<PractitionerResponseDTO> getPractitioner(@PathVariable String nationalId) { // <--- Retorna el DTO
+    public ResponseEntity<PractitionerResponseDTO> getPractitioner(@PathVariable String nationalId) {
         try {
             PractitionerResponseDTO practitionerDto = practitionerService.getPractitionerByNationalIdWithFhirData(nationalId);
             return ResponseEntity.ok(practitionerDto);
@@ -46,8 +46,8 @@ public class PractitionerController {
         }
     }
 
-    @GetMapping // GET /api/practitioners (para obtener la lista)
-    public ResponseEntity<List<PractitionerResponseDTO>> getAllPractitioners() { // <--- Retorna una lista de DTOs
+    @GetMapping // Métoodo GET /api/practitioners (para obtener todos)
+    public ResponseEntity<List<PractitionerResponseDTO>> getAllPractitioners() {
         try {
             List<PractitionerResponseDTO> practitioners = practitionerService.getAllPractitionersWithFhirData();
             return ResponseEntity.ok(practitioners);
@@ -58,9 +58,9 @@ public class PractitionerController {
 
     /*
     @PutMapping("/{nationalId}") // PUT /api/practitioners/{nationalId}
-    public ResponseEntity<PractitionerResponseDTO> updatePractitioner( // <--- Retorna el DTO
+    public ResponseEntity<PractitionerResponseDTO> updatePractitioner(
                                                                        @PathVariable String nationalId,
-                                                                       @RequestBody String updatedFhirPractitionerJson) { // <--- Espera el JSON completo de FHIR para actualizar
+                                                                       @RequestBody String updatedFhirPractitionerJson) {
         try {
             PractitionerResponseDTO practitioner = practitionerService.updatePractitioner(nationalId, updatedFhirPractitionerJson);
             return ResponseEntity.ok(practitioner);
@@ -72,7 +72,8 @@ public class PractitionerController {
     }
     /*
      */
-    @DeleteMapping("/{nationalId}") // DELETE /api/practitioners/{nationalId}
+
+    @DeleteMapping("/{nationalId}") // Método DELETE /api/practitioners/{nationalId}
     public ResponseEntity<Void> deletePractitioner(@PathVariable String nationalId) {
         try {
             practitionerService.deletePractitioner(nationalId);
