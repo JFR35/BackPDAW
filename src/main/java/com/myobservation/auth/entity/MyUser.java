@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import org.springframework.modulith.NamedInterface;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,25 +14,23 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Representa a la entidad de usuario en el sistema.
+ * Implementa {@link UserDetails} para integrarse con Srping Security.
+ */
 @Entity()
 @Table(name = "users")
+@NamedInterface
 public class MyUser implements UserDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
 
     private Long userId;
 
+    // La Notación NotBlank es más a nivel código por ejemplo para DTOs en la entidad de la bbdd es mejor nullable
     @NotBlank(message = "First name cannot be blank")
     @Pattern(regexp = "^[A-Za-z]+$", message = "First name must contain only letters")
     private String firstName;
-
-    public Set<Role> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(Set<Role> roles) {
-        this.roles = roles;
-    }
 
     @NotBlank(message = "Last name cannot be blank")
     @Pattern(regexp = "^[A-Za-z]+$", message = "Last name must contain only letters")
@@ -53,6 +52,14 @@ public class MyUser implements UserDetails {
             inverseJoinColumns = @JoinColumn(name = "role_id")
     )
     private Set<Role> roles;
+
+    public Set<Role> getRoles() {
+        return roles;
+    }
+
+    public void setRoles(Set<Role> roles) {
+        this.roles = roles;
+    }
 
     public Long getUserId() {
         return userId;
@@ -86,6 +93,10 @@ public class MyUser implements UserDetails {
         this.email = email;
     }
 
+    /**
+     * Obtiene la lista de autoridades del usuario basada en sus roles
+     * @return Colección de autorides del usuario.
+     */
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return this.roles.stream()
@@ -97,32 +108,35 @@ public class MyUser implements UserDetails {
         return password;
     }
 
+    public void setPassword(String password) {
+        this.password = password;
+    }
     @Override
     public String getUsername() {
         return this.email;
     }
 
+    // Indica si la cuenta ha expirado.
     @Override
     public boolean isAccountNonExpired() {
         return true;
     }
 
+    // Indica si la cuenta está bloqueada.
     @Override
     public boolean isAccountNonLocked() {
         return true;
     }
 
+    // Indica si las credenciales han expirado con True/False
     @Override
     public boolean isCredentialsNonExpired() {
         return true;
     }
 
+    // Indica si el usuario está habilitado
     @Override
     public boolean isEnabled() {
         return true;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
     }
 }

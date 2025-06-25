@@ -1,8 +1,8 @@
 package com.myobservation.auth.controller;
 
-import com.myobservation.auth.config.AuthRequest;
-import com.myobservation.auth.config.AuthResponse;
-import com.myobservation.auth.config.AuthService;
+import com.myobservation.auth.security.AuthRequest;
+import com.myobservation.auth.security.AuthResponse;
+import com.myobservation.auth.security.AuthService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Controlador de autenticación que gestiona el inicio de sesión de usuarios.
+ * Este controlador proporciona un endpoint para la autenticación mediante JWT.
+ */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -28,6 +32,7 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         response.put("token", authResponse.token());
         response.put("role", authResponse.role());
+        response.put("userId", authResponse.userId());
         response.put("message", "Login exitoso");
         return ResponseEntity.ok(response);
     }
